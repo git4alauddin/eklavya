@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #090d15;
   --bg-2: #0d1320;
   --panel: #111a2a;
@@ -645,7 +645,7 @@ input[type="range"] {
   color: #f4e1b7;
   border-radius: 8px;
   padding: 6px 10px;
-  cursor: pointer;
+  
   font-weight: 500;
 }
 
@@ -876,7 +876,7 @@ input[type="range"] {
   background: #162338;
   color: var(--text);
   padding: 8px 10px;
-  cursor: pointer;
+  
 }
 
 .questChoice.selected {
@@ -885,7 +885,7 @@ input[type="range"] {
 }
 
 .card.cardQuest {
-  cursor: pointer;
+  
   transition: border-color 140ms ease, transform 140ms ease;
 }
 
@@ -1269,3 +1269,203 @@ input[type="range"] {
 }
 
 
+
+.reviewGridTopicApproval {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 360px));
+  justify-content: center;
+  align-items: start;
+}
+
+
+.approvalSelectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 300px));
+  gap: 12px;
+  justify-content: center;
+}
+
+.approvalSelectCard {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #122035;
+  padding: 12px;
+  
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.approvalSelectCard:hover {
+  border-color: #5f7fab;
+  transform: translateY(-1px);
+}
+
+.approvalSelectCard:focus-visible {
+  outline: 2px solid #d4a84a;
+  outline-offset: 2px;
+}
+
+.approvalSelectCard h3 {
+  margin: 0 0 6px;
+}
+
+.approvalGradeChips {
+  margin-top: 10px;
+}
+
+
+.approvalGradeChipBtn {
+  
+  border: 1px solid #4f7b9a;
+}
+
+.approvalGradeSwitchBtn {
+  
+  border: 1px solid #4f7b9a;
+}
+
+.approvalGradeSwitchBtn.active {
+  border-color: #f0c86a;
+  background: linear-gradient(135deg, #d4a84a, #f0c86a);
+  color: #1a1203;
+}
+
+
+.approvalSelectCard:hover {
+  box-shadow: 0 10px 22px #00000033;
+}
+
+.approvalGradeChipBtn,
+.approvalGradeSwitchBtn {
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.approvalGradeChipBtn:hover,
+.approvalGradeSwitchBtn:hover {
+  transform: translateY(-1px);
+  border-color: #7aa5ce;
+  box-shadow: 0 6px 14px #0000002b;
+  filter: brightness(1.06);
+}
+
+.approvalGradeChipBtn:focus-visible,
+.approvalGradeSwitchBtn:focus-visible {
+  outline: 2px solid #d4a84a;
+  outline-offset: 2px;
+}
+
+
+
+
+
+
+.reviewGridTopicApproval {
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+}
+
+.reviewGridTopicApproval .reviewCard {
+  width: 100%;
+  max-width: none;
+}
+
+
+.topicApprovalTopicWrap {
+  gap: 10px;
+}
+
+.topicApprovalTopicChip {
+  white-space: normal;
+  line-height: 1.35;
+}
+
+
+.topicApprovalTopicChip {
+  border: 1px solid #4f7b9a;
+  cursor: pointer;
+  text-align: left;
+}
+
+.topicApprovalTopicChip.active {
+  border-color: #f0c86a;
+  background: linear-gradient(180deg, #2f2612 0%, #241d0f 100%);
+  color: #f5dfad;
+}
+
+.topicApprovalDetailTitle {
+  margin: 0 0 6px;
+}
+
+.topicApprovalActionRow {
+  margin-top: 10px;
+}
+
+
+.topicApprovalActionSpacer {
+  flex: 1;
+}
+
+.topNavLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #5b4925;
+  background: #2b2312;
+  color: #e8dcc0;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backBadge:hover {
+  filter: brightness(1.08);
+}
+
+.scopeBadges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+
+.scopeNav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scopeNavArrow {
+  width: 26px;
+  height: 26px;
+  font-size: 0.9rem;
+}
+
+.brandLink {
+  text-decoration: none;
+  color: #f0d89b;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  font-size: 1.02rem;
+  line-height: 1;
+  padding: 2px 0;
+  border-bottom: 1px solid transparent;
+  transition: color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.brandLink:hover {
+  color: #f6e1b0;
+  border-bottom-color: #6f5a31;
+}
+
+.brandLink.active {
+  color: #f5dfad;
+  border-bottom-color: #8a6f3a;
+}

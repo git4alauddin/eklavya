@@ -1,169 +1,236 @@
-﻿import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { subjectLabels, supportedSubjects } from "../data/subjects";
 import { graphData } from "../graphData";
+import type { Subject } from "../types";
 
 type TopicReviewStatus = "pending" | "approved" | "rejected";
 
-const statusMark = (status: TopicReviewStatus): string => {
-  if (status === "approved") return "\u2713";
-  if (status === "rejected") return "\u2715";
-  return "\u2022";
-};
-
-const toStatusClassSuffix = (status: TopicReviewStatus): "Approved" | "Rejected" | "Pending" => {
-  if (status === "approved") return "Approved";
-  if (status === "rejected") return "Rejected";
-  return "Pending";
-};
-
 export function TopicApprovalPage() {
-  const topicsByGrade = useMemo(() => {
-    const byGrade = new Map<string, typeof graphData.topics>();
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+
+  const groupedBySubject = useMemo(() => {
+    const bySubject = new Map<Subject, Map<string, typeof graphData.topics>>();
 
     for (const topic of graphData.topics) {
-      const existing = byGrade.get(topic.gradeBand) ?? [];
+      const gradeMap = bySubject.get(topic.subject) ?? new Map<string, typeof graphData.topics>();
+      const existing = gradeMap.get(topic.gradeBand) ?? [];
       existing.push(topic);
-      byGrade.set(topic.gradeBand, existing);
+      gradeMap.set(topic.gradeBand, existing);
+      bySubject.set(topic.subject, gradeMap);
     }
 
-    return Array.from(byGrade.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([gradeBand, topics]) => ({
-        gradeBand,
-        topics: [...topics].sort((a, b) => a.title.localeCompare(b.title)),
-      }));
+    return bySubject;
   }, []);
 
-  const initialStatusMap = useMemo(
-    () => Object.fromEntries(graphData.topics.map((topic) => [topic.id, "pending"])) as Record<string, TopicReviewStatus>,
-    [],
+  const totalTopics = graphData.topics.length;
+
+  const subjectCards = useMemo(
+    () =>
+      supportedSubjects.map((subject) => {
+        const gradeMap = groupedBySubject.get(subject) ?? new Map();
+        const topicCount = Array.from(gradeMap.values()).reduce((sum, topics) => sum + topics.length, 0);
+        const grades = Array.from(gradeMap.keys()).sort((a, b) => a.localeCompare(b));
+        return { subject, topicCount, grades };
+      }),
+    [groupedBySubject],
   );
 
-  const [statusMap, setStatusMap] = useState<Record<string, TopicReviewStatus>>(initialStatusMap);
+  const selectedSubjectGrades = useMemo(() => {
+    if (!selectedSubject) return [];
+    return Array.from(groupedBySubject.get(selectedSubject)?.keys() ?? []).sort((a, b) => a.localeCompare(b));
+  }, [groupedBySubject, selectedSubject]);
 
-  const totalTopics = graphData.topics.length;
+  const selectedTopics = useMemo(() => {
+    if (!selectedSubject || !selectedGrade) return [];
+    return (groupedBySubject.get(selectedSubject)?.get(selectedGrade) ?? [])
+      .slice()
+      .sort((a, b) => a.title.localeCompare(b.title));
+  }, [groupedBySubject, selectedSubject, selectedGrade]);
+
+  const [statusMap, setStatusMap] = useState<Record<string, TopicReviewStatus>>({});
+
+  useEffect(() => {
+    setSelectedTopicId(null);
+  }, [selectedSubject, selectedGrade]);
+
+  const selectedTopic = useMemo(
+    () => selectedTopics.find((topic) => topic.id === selectedTopicId) ?? null,
+    [selectedTopicId, selectedTopics],
+  );
+
+  const selectedTopicStatus = selectedTopic ? statusMap[selectedTopic.id] ?? "pending" : "pending";
+
+  const gradeStatusCounts = useMemo(
+    () =>
+      selectedTopics.reduce(
+        (acc, topic) => {
+          const status = statusMap[topic.id] ?? "pending";
+          if (status === "approved") acc.approved += 1;
+          if (status === "rejected") acc.rejected += 1;
+          if (status === "pending") acc.pending += 1;
+          return acc;
+        },
+        { approved: 0, rejected: 0, pending: 0 },
+      ),
+    [selectedTopics, statusMap],
+  );
 
   return (
     <section className="panel">
       <div className="sectionHead">
         <div className="sectionTitleWithBadge">
           <h2>Topic Approval</h2>
-          <span className="resultCount">{topicsByGrade.length} Grades</span>
           <span className="resultCount">{totalTopics} Topics</span>
         </div>
       </div>
-      <p className="muted">Review topic-level structure and finalize approve/reject/pending states.</p>
+      <p className="muted">Choose subject and grade, then review topic list.</p>
 
       <div className="sectionDivider" />
 
-      <div className="reviewGrid">
-        {topicsByGrade.map(({ gradeBand, topics }) => {
-          const counts = topics.reduce(
-            (acc, topic) => {
-              const status = statusMap[topic.id] ?? "pending";
-              if (status === "approved") acc.approved += 1;
-              if (status === "rejected") acc.rejected += 1;
-              if (status === "pending") acc.pending += 1;
-              return acc;
-            },
-            { approved: 0, rejected: 0, pending: 0 },
-          );
+      {!selectedSubject || !selectedGrade ? (
+        <div className="approvalSelectGrid">
+          {subjectCards.map((item) => (
+            <article className="approvalSelectCard" key={item.subject}>
+              <h3>{subjectLabels[item.subject]}</h3>
+              <p className="muted">{item.topicCount} topics</p>
+              <div className="chipWrap approvalGradeChips">
+                {item.grades.length > 0 ? (
+                  item.grades.map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      className="chip chipSoft approvalGradeChipBtn"
+                      onClick={() => {
+                        setSelectedSubject(item.subject);
+                        setSelectedGrade(g);
+                      }}
+                    >
+                      {g}
+                    </button>
+                  ))
+                ) : (
+                  <span className="chip chipSoft">No data</span>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="plannerMeta">
+            <button
+              className="smallBtn"
+              type="button"
+              onClick={() => {
+                setSelectedSubject(null);
+                setSelectedGrade(null);
+              }}
+            >
+              Back To Subjects
+            </button>
+            <span className="resultCount">{subjectLabels[selectedSubject]}</span>
+            {selectedSubjectGrades.map((grade) => (
+              <button
+                key={grade}
+                type="button"
+                className={`chip chipSoft approvalGradeSwitchBtn ${selectedGrade === grade ? "active" : ""}`}
+                onClick={() => setSelectedGrade(grade)}
+              >
+                {grade}
+              </button>
+            ))}
+          </div>
 
-          return (
-            <article className="reviewCard" key={gradeBand}>
+          <div className="reviewGrid reviewGridTopicApproval">
+            <article className="reviewCard" key={`${selectedSubject}-${selectedGrade}`}>
               <div className="reviewSection reviewSectionTop">
                 <div className="reviewHead">
                   <div>
-                    <h3>{gradeBand} Topics</h3>
-                    <p className="muted">Topic count: {topics.length}</p>
+                    <h3>{selectedGrade} Topics</h3>
+                    <p className="muted">Topic count: {selectedTopics.length}</p>
                   </div>
-                  <button className="smallBtn reviewOpenBtn" type="button">
-                    Suggest me
-                  </button>
-                </div>
-
-                <div className="chipWrap">
-                  <span className="reviewStatus approved">Approved {counts.approved}</span>
-                  <span className="reviewStatus rejected">Rejected {counts.rejected}</span>
-                  <span className="reviewStatus pending">Pending {counts.pending}</span>
+                  <div className="chipWrap">
+                    <span className="reviewStatus approved">Approved {gradeStatusCounts.approved}</span>
+                    <span className="reviewStatus rejected">Rejected {gradeStatusCounts.rejected}</span>
+                    <span className="reviewStatus pending">Pending {gradeStatusCounts.pending}</span>
+                  </div>
                 </div>
               </div>
 
               <div className="reviewDivider" />
 
               <div className="reviewSection reviewSectionMid">
-                <div className="reviewSubtopicList">
-                  {topics.map((topic) => {
-                    const status = statusMap[topic.id] ?? "pending";
-                    const statusSuffix = toStatusClassSuffix(status);
-
-                    return (
-                      <div className="reviewSubtopicRow" key={topic.id}>
-                        <span className={`chip chipSoft reviewSubtopicChip reviewSubtopicChip${statusSuffix}`}>
-                          <span
-                            className={`reviewSubtopicMark reviewSubtopicMark${statusSuffix}`}
-                            aria-hidden="true"
-                          >
-                            {statusMark(status)}
-                          </span>
-                          {topic.title} | {topic.mathTopic}
-                        </span>
-                        <div className="reviewSubtopicActions">
-                          <button
-                            className={`smallBtn reviewActionBtn reviewActionApprove ${status === "approved" ? "isActiveApprove" : ""}`}
-                            onClick={() =>
-                              setStatusMap((prev) => ({
-                                ...prev,
-                                [topic.id]: "approved",
-                              }))
-                            }
-                            type="button"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            className={`smallBtn reviewActionBtn reviewActionReject ${status === "rejected" ? "isActiveReject" : ""}`}
-                            onClick={() =>
-                              setStatusMap((prev) => ({
-                                ...prev,
-                                [topic.id]: "rejected",
-                              }))
-                            }
-                            type="button"
-                          >
-                            Reject
-                          </button>
-                          <button
-                            className={`smallBtn reviewActionBtn reviewActionPending ${status === "pending" ? "isActivePending" : ""}`}
-                            onClick={() =>
-                              setStatusMap((prev) => ({
-                                ...prev,
-                                [topic.id]: "pending",
-                              }))
-                            }
-                            type="button"
-                          >
-                            Pending
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="chipWrap topicApprovalTopicWrap">
+                  {selectedTopics.map((topic, idx) => (
+                    <button
+                      type="button"
+                      className={`chip chipSoft reviewSubtopicChip topicApprovalTopicChip ${selectedTopicId === topic.id ? "active" : ""}`}
+                      key={topic.id}
+                      onClick={() => setSelectedTopicId(topic.id)}
+                    >
+                      {idx + 1}. {topic.title} | {topic.mathTopic}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="reviewDivider" />
-
-              <div className="reviewSection reviewSectionFoot">
-                <div className="plannerMeta reviewConfirmRow">
-                  <button className="smallBtn reviewConfirmBtn" type="button">
-                    Update
-                  </button>
-                </div>
-              </div>
+              {selectedTopic ? (
+                <>
+                  <div className="reviewDivider" />
+                  <div className="reviewSection reviewSectionFoot">
+                    <h3 className="topicApprovalDetailTitle">{selectedTopic.title}</h3>
+                    <p className="muted">{selectedTopic.mathTopic}</p>
+                    <div className="plannerMeta topicApprovalActionRow">
+                      <button
+                        className={`smallBtn reviewActionBtn reviewActionApprove ${selectedTopicStatus === "approved" ? "isActiveApprove" : ""}`}
+                        type="button"
+                        onClick={() =>
+                          setStatusMap((prev) => ({
+                            ...prev,
+                            [selectedTopic.id]: "approved",
+                          }))
+                        }
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className={`smallBtn reviewActionBtn reviewActionReject ${selectedTopicStatus === "rejected" ? "isActiveReject" : ""}`}
+                        type="button"
+                        onClick={() =>
+                          setStatusMap((prev) => ({
+                            ...prev,
+                            [selectedTopic.id]: "rejected",
+                          }))
+                        }
+                      >
+                        Reject
+                      </button>
+                      <button
+                        className={`smallBtn reviewActionBtn reviewActionPending ${selectedTopicStatus === "pending" ? "isActivePending" : ""}`}
+                        type="button"
+                        onClick={() =>
+                          setStatusMap((prev) => ({
+                            ...prev,
+                            [selectedTopic.id]: "pending",
+                          }))
+                        }
+                      >
+                        Pending
+                      </button>
+                      <span className="topicApprovalActionSpacer" />
+                      <button className="smallBtn reviewOpenBtn" type="button">
+                        Suggest me
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : null}
             </article>
-          );
-        })}
-      </div>
+          </div>
+        </>
+      )}
     </section>
   );
 }
