@@ -1,13 +1,16 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { learningQuests } from "../data/contents";
+import { subjectLabels, supportedSubjects } from "../data/subjects";
 import { graphData, starterMastery } from "../graphData";
-import type { LearnerMastery } from "../types";
+import type { LearnerMastery, Subject } from "../types";
 
 export function TopicCardsPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [mastery, setMastery] = useState<LearnerMastery>(starterMastery);
   const [search, setSearch] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [cardsPerPage, setCardsPerPage] = useState(6);
   const cardGridRef = useRef<HTMLDivElement | null>(null);
@@ -17,16 +20,36 @@ export function TopicCardsPage() {
     [],
   );
 
+  useEffect(() => {
+    const param = searchParams.get("subject");
+    const isValidSubject = supportedSubjects.includes(param as Subject);
+    setSelectedSubject(isValidSubject ? (param as Subject) : null);
+  }, [searchParams]);
+
   const filteredTopics = useMemo(() => {
     const q = search.trim().toLowerCase();
+
+    const scopedTopics = selectedSubject
+      ? graphData.topics.filter((topic) => topic.subject === selectedSubject)
+      : graphData.topics;
+
     if (!q) {
-      return graphData.topics;
+      return scopedTopics;
     }
-    return graphData.topics.filter((topic) => {
+
+    return scopedTopics.filter((topic) => {
       const hay = `${topic.mathTopic} ${topic.title} ${topic.description} ${topic.gradeBand}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [search]);
+  }, [search, selectedSubject]);
+
+  const totalInScope = useMemo(
+    () =>
+      selectedSubject
+        ? graphData.topics.filter((topic) => topic.subject === selectedSubject).length
+        : graphData.topics.length,
+    [selectedSubject],
+  );
 
   const setTopicMastery = (topicId: string, value: number) => {
     const clamped = Math.max(0, Math.min(1, value));
@@ -53,7 +76,7 @@ export function TopicCardsPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, selectedSubject]);
 
   const totalPages = Math.max(1, Math.ceil(filteredTopics.length / cardsPerPage));
 
@@ -66,15 +89,41 @@ export function TopicCardsPage() {
     return filteredTopics.slice(start, start + cardsPerPage);
   }, [filteredTopics, currentPage, cardsPerPage]);
 
+  const updateSubjectFilter = (subject: Subject | null) => {
+    setSelectedSubject(subject);
+    const nextParams = new URLSearchParams(searchParams);
+    if (subject) {
+      nextParams.set("subject", subject);
+    } else {
+      nextParams.delete("subject");
+    }
+    setSearchParams(nextParams);
+  };
+
   return (
     <section className="panel">
       <div className="sectionHead">
         <div className="sectionTitleWithBadge">
           <h2>Learning Cards</h2>
-          <span className="resultCount">Total: {graphData.topics.length}</span>
+          <span className="resultCount">Total: {totalInScope}</span>
         </div>
-        <span className="pageStatus">Page {currentPage} of {totalPages}</span>
+        <div className="sectionHeadRight">
+          <div className="subjectSwitchRow">
+            {(["all", ...supportedSubjects] as const).map((subject) => (
+              <button
+                key={subject}
+                type="button"
+                className={`smallBtn subjectSwitchBtn compact ${subject !== "all" ? "subjectSwitchBtnBlue" : ""} ${selectedSubject === subject ? "active" : ""}`}
+                onClick={() => updateSubjectFilter(subject === "all" ? null : (subject as Subject))}
+              >
+                {subject === "all" ? "ALL" : subjectLabels[subject]}
+              </button>
+            ))}
+          </div>
+          <span className="pageStatus">Page {currentPage} of {totalPages}</span>
+        </div>
       </div>
+
       <div className="searchRow">
         <input
           className="searchInput"
@@ -83,7 +132,14 @@ export function TopicCardsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button type="button" className="smallBtn" onClick={() => setSearch("")}>
+        <button
+          type="button"
+          className="smallBtn"
+          onClick={() => {
+            setSearch("");
+            updateSubjectFilter(null);
+          }}
+        >
           Clear
         </button>
       </div>
@@ -171,11 +227,4 @@ export function TopicCardsPage() {
     </section>
   );
 }
-
-
-
-
-
-
-
 

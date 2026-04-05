@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { supportedSubjects, subjectLabels } from "./data/subjects";
 import "./style.css";
 
 function App() {
@@ -6,6 +7,8 @@ function App() {
   const navigate = useNavigate();
   const isGraphRoute = location.pathname === "/graph";
   const isHome = location.pathname === "/";
+  const topicSearch = new URLSearchParams(location.search);
+  const activeNavSubject = location.pathname === "/topics" ? topicSearch.get("subject") : null;
 
   return (
     <div className={isGraphRoute ? "page pageGraph" : "page"}>
@@ -33,9 +36,16 @@ function App() {
           </button>
 
           <div className="scopeBadges">
-            <span className="scopeBadge">NCERT Maths | Class 4-7</span>
-            <span className="scopeBadge">NCERT Physics | Class 6-8</span>
-            <span className="scopeBadge">NCERT Chemistry | Class 6-7</span>
+            {supportedSubjects.map((subject) => (
+              <Link
+                key={subject}
+                className={`scopeBadge scopeBadgeLink ${activeNavSubject === subject ? "active" : ""}`}
+                to={`/topics?subject=${subject}`}
+                title={subjectLabels[subject]}
+              >
+                {subjectLabels[subject]}
+              </Link>
+            ))}
           </div>
 
           <button
@@ -62,3 +72,5 @@ function App() {
 }
 
 export default App;
+
+

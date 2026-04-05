@@ -1453,7 +1453,7 @@ input[type="range"] {
   color: #f0d89b;
   font-weight: 800;
   letter-spacing: 0.3px;
-  font-size: 1.02rem;
+  font-size: 1.15rem;
   line-height: 1;
   padding: 2px 0;
   border-bottom: 1px solid transparent;
@@ -1469,3 +1469,62 @@ input[type="range"] {
   color: #f5dfad;
   border-bottom-color: #8a6f3a;
 }
+
+.sectionHeadRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subjectSwitchBtn.compact {
+  min-width: 72px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  border-radius: 999px;
+}
+.scopeBadgeLink {
+  text-decoration: none;
+}
+
+.scopeBadgeLink.active {
+  border-color: #f0c86a;
+  background: linear-gradient(135deg, #d4a84a, #f0c86a);
+  color: #1a1203;
+}
+.scopeBadgeLink {
+  border-color: #456991;
+  background: #1a2f4b;
+  color: #c7def7;
+  text-decoration: none;
+}
+
+.scopeBadgeLink:hover {
+  border-color: #5c86b9;
+  background: #213a5e;
+  color: #d7ecff;
+}
+
+.scopeBadgeLink.active {
+  border-color: #8db9ec;
+  background: #2b4b79;
+  color: #f2f8ff;
+}
+.subjectSwitchBtnBlue {
+  border-color: #456991;
+  background: #1a2f4b;
+  color: #c7def7;
+}
+
+.subjectSwitchBtnBlue:hover {
+  border-color: #5c86b9;
+  background: #213a5e;
+  color: #d7ecff;
+}
+
+.subjectSwitchBtnBlue.active {
+  border-color: #8db9ec;
+  background: #2b4b79;
+  color: #f2f8ff;
+}
+
+
