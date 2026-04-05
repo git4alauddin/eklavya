@@ -1,0 +1,24 @@
+<svg width="220" height="220" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cloak" x1="84" y1="104" x2="140" y2="174" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6F88B7"/>
+      <stop offset="1" stop-color="#4D6287"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="99" y1="54" x2="124" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5D39A"/>
+      <stop offset="1" stop-color="#D8B076"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="112" cy="68" r="18" fill="url(#skin)"/>
+  <path d="M97 62C101 52 113 48 124 53C121 55 120 59 121 63C113 65 105 65 97 62Z" fill="#212A3D"/>
+
+  <path d="M79 112C88 96 106 89 122 92C139 95 151 108 153 125L157 172H70L79 112Z" fill="url(#cloak)"/>
+  <path d="M100 95L110 120L121 95" stroke="#D4A84A" stroke-width="4" stroke-linecap="round"/>
+
+  <path d="M141 112C160 113 174 126 176 145" stroke="#D4A84A" stroke-width="4" stroke-linecap="round"/>
+  <path d="M176 145C175 160 166 171 154 177" stroke="#D4A84A" stroke-width="4" stroke-linecap="round"/>
+  <path d="M146 136L187 136" stroke="#EAD9B0" stroke-width="3" stroke-linecap="round"/>
+
+  <path d="M74 175H160" stroke="#2C3F5B" stroke-width="6" stroke-linecap="round"/>
+</svg>
