@@ -1,24 +1,38 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { learningQuests } from "../data/content";
 import { graphData, starterMastery } from "../graphData";
 import type { LearnerMastery } from "../types";
 
 export function TopicCardsPage() {
+  const navigate = useNavigate();
   const [mastery, setMastery] = useState<LearnerMastery>(starterMastery);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [cardsPerPage, setCardsPerPage] = useState(6);
   const cardGridRef = useRef<HTMLDivElement | null>(null);
 
+  const questTopicIds = useMemo(
+    () => new Set(learningQuests.map((quest) => quest.topicId)),
+    [],
+  );
+
+  // Demo mode: show only cards that already have developed quest content.
+  const developedTopics = useMemo(
+    () => graphData.topics.filter((topic) => questTopicIds.has(topic.id)),
+    [questTopicIds],
+  );
+
   const filteredTopics = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) {
-      return graphData.topics;
+      return developedTopics;
     }
-    return graphData.topics.filter((topic) => {
+    return developedTopics.filter((topic) => {
       const hay = `${topic.mathTopic} ${topic.title} ${topic.description} ${topic.gradeBand}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [search]);
+  }, [search, developedTopics]);
 
   const setTopicMastery = (topicId: string, value: number) => {
     const clamped = Math.max(0, Math.min(1, value));
@@ -62,8 +76,8 @@ export function TopicCardsPage() {
     <section className="panel">
       <div className="sectionHead">
         <div className="sectionTitleWithBadge">
-          <h2>Math Learning Cards</h2>
-          <span className="resultCount">Total: {graphData.topics.length}</span>
+          <h2>Developed Math Cards</h2>
+          <span className="resultCount">Total: {developedTopics.length}</span>
         </div>
         <span className="pageStatus">Page {currentPage} of {totalPages}</span>
       </div>
@@ -84,8 +98,26 @@ export function TopicCardsPage() {
         {pagedTopics.map((topic) => {
           const value = mastery[topic.id] ?? 0;
           const masteryLabel = value >= 0.75 ? "Strong" : value >= 0.45 ? "Developing" : "Needs Work";
+          const hasQuest = questTopicIds.has(topic.id);
           return (
-            <article className="card" key={topic.id}>
+            <article
+              className={hasQuest ? "card cardQuest" : "card"}
+              key={topic.id}
+              role={hasQuest ? "button" : undefined}
+              tabIndex={hasQuest ? 0 : undefined}
+              onClick={() => {
+                if (hasQuest) {
+                  navigate(`/quest/${topic.id}`);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (!hasQuest) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/quest/${topic.id}`);
+                }
+              }}
+            >
               <div className="cardTopicScopeRow">
                 <div className="cardTopicScopeBadge">{topic.mathTopic}</div>
                 <span className="gradeBadge">{topic.gradeBand}</span>
@@ -94,6 +126,7 @@ export function TopicCardsPage() {
               <div className="cardSection sectionTitle">
                 <div className="cardTitleRow">
                   <h3>{topic.title}</h3>
+                  {hasQuest ? <span className="masteryBadge">Quest</span> : null}
                 </div>
               </div>
               <div className="cardDivider" />
@@ -103,7 +136,7 @@ export function TopicCardsPage() {
                 </p>
               </div>
               <div className="cardDivider" />
-              <div className="cardSection sectionMastery">
+              <div className="cardSection sectionMastery" onClick={(e) => e.stopPropagation()}>
                 <div className="masteryRow">
                   <label className="masteryLabel" htmlFor={`slider-${topic.id}`}>
                     Mastery
@@ -119,6 +152,7 @@ export function TopicCardsPage() {
                   min={0}
                   max={100}
                   value={Math.round(value * 100)}
+                  onClick={(e) => e.stopPropagation()}
                   onChange={(e) => setTopicMastery(topic.id, Number(e.target.value) / 100)}
                 />
               </div>

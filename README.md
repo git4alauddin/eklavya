@@ -7,6 +7,7 @@ It includes:
 - Hard vs soft prerequisite modeling
 - Target planner with readiness and recommendations
 - Math Learning Cards with mastery tracking
+- Interactive learning quests (story + play + checkpoint + reward)
 
 ## Tech Stack
 
@@ -30,7 +31,7 @@ App runs on the Vite default local URL shown in terminal (usually `http://localh
 - `npm run typecheck` - TypeScript checks
 - `npm run test` - run unit tests
 - `npm run test:watch` - run tests in watch mode
-- `npm run validate:data` - validate graph/data integrity
+- `npm run validate:data` - validate graph and learning-quest data integrity
 - `npm run check` - typecheck + tests + data validation
 - `npm run build` - production build
 - `npm run preview` - preview production build
@@ -40,14 +41,15 @@ App runs on the Vite default local URL shown in terminal (usually `http://localh
 ```txt
 src/
   data/ncert/           # grade-wise topic data (Class 4,5,6,7)
+  data/content/         # interactive learning-quest packs
   routes/               # pages: Hub, Planner, Graph, Topic Cards
   graphData.ts          # merged graph data + dependency edges
   graphEngine.ts        # core algorithms (validation, readiness, roadmap, suggestions)
   graphEngine.test.ts   # unit tests for graph engine
-  types.ts              # shared types
+  types.ts              # shared types + content schema
   style.css             # app styles
 scripts/
-  validate-data.ts      # CLI data/graph validator
+  validate-data.ts      # CLI data/graph/content validator
 ```
 
 ## Data and Graph Rules
@@ -57,6 +59,18 @@ scripts/
 - Every edge must point to existing topics
 - `minMastery` must be between `0` and `1`
 - No cycles and no self-loop dependencies
+
+## Learning Quest Schema (Backbone)
+
+Each quest is mapped to a topic and follows this flow:
+- Hook story
+- Micro concept steps
+- Interactive choice/match/reorder steps
+- Mastery checkpoint
+- Reward + next unlock links
+
+See starter example:
+- `src/data/content/class4HalvesQuest.ts`
 
 ## Contribution Notes
 

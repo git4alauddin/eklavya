@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { learningQuests } from "../data/content";
 import { graphData, starterMastery } from "../graphData";
 import { getNextSuggestions } from "../graphEngine";
 import type { LearnerMastery } from "../types";
@@ -39,6 +41,10 @@ export function PlannerPage() {
     const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
     return Math.round(avg * 100);
   }, [directPrereqIds, mastery]);
+  const targetQuest = useMemo(
+    () => learningQuests.find((quest) => quest.topicId === targetId),
+    [targetId],
+  );
 
   return (
     <section className="panel">
@@ -75,6 +81,13 @@ export function PlannerPage() {
             ))}
           </datalist>
         </div>
+        {targetQuest ? (
+          <div className="plannerMeta">
+            <Link className="smallBtn questLaunchBtn" to={`/quest/${targetQuest.topicId}`}>
+              Start Quest
+            </Link>
+          </div>
+        ) : null}
         <div className="plannerGrid">
           <article className="plannerCard hard">
             <h3>Hard Prerequisites</h3>
