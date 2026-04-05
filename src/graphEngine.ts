@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   DependencyEdge,
   LearnerMastery,
   LearningGraph,
@@ -54,6 +54,9 @@ export const validateGraph = (graph: LearningGraph): void => {
       throw new Error(`Duplicate topic id '${topic.id}'`);
     }
     seenIds.add(topic.id);
+    if (!topic.subject.trim()) {
+      throw new Error(`Topic '${topic.id}' has empty subject`);
+    }
     if (!topic.title.trim()) {
       throw new Error(`Topic '${topic.id}' has empty title`);
     }
@@ -337,3 +340,5 @@ export const getNextSuggestions = (
 
   return scored.sort((a, b) => b.score - a.score).slice(0, limit);
 };
+
+

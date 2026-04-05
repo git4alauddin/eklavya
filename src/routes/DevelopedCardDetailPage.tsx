@@ -1,6 +1,6 @@
-import { Link, useParams } from "react-router-dom";
-import { learningQuests } from "../data/content";
-import { subtopicPacks } from "../data/subtopics";
+﻿import { Link, useParams } from "react-router-dom";
+import { learningQuests } from "../data/contents";
+import { subtopicPacks } from "../data/sub-topics";
 import { graphData } from "../graphData";
 
 export function DevelopedCardDetailPage() {
@@ -78,3 +78,4 @@ export function DevelopedCardDetailPage() {
     </section>
   );
 }
+

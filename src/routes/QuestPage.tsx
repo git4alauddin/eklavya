@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { learningQuests } from "../data/content";
+import { learningQuests } from "../data/contents";
 import { graphData } from "../graphData";
 import type { ContentStep, StepChoice } from "../types";
 
@@ -230,3 +230,4 @@ export function QuestPage() {
     </section>
   );
 }
+

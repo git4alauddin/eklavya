@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { learningQuests } from "../data/content";
+import { learningQuests } from "../data/contents";
 import { graphData, starterMastery } from "../graphData";
 import { getNextSuggestions } from "../graphEngine";
 import type { LearnerMastery } from "../types";
@@ -192,3 +192,4 @@ export function PlannerPage() {
     </section>
   );
 }
+

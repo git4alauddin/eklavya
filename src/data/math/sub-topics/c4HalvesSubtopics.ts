@@ -1,6 +1,7 @@
-import type { TopicSubtopicPack } from "../../types";
+﻿import type { TopicSubtopicPack } from "../../../types";
 
 export const c4HalvesSubtopicPack: TopicSubtopicPack = {
+  subject: "math",
   topicId: "c4_09_halves_and_quarters",
   version: 1,
   generatedAt: "2026-04-06",
@@ -14,9 +15,7 @@ export const c4HalvesSubtopicPack: TopicSubtopicPack = {
       prerequisiteSubtopicIds: [],
       difficulty: "easy",
       estimatedMinutes: 8,
-      misconceptions: [
-        "Any split is fair even if pieces are not equal.",
-      ],
+      misconceptions: ["Any split is fair even if pieces are not equal."],
       examples: [
         "Split one roti into 2 equal pieces.",
         "Share one apple equally between two friends.",
@@ -37,9 +36,7 @@ export const c4HalvesSubtopicPack: TopicSubtopicPack = {
       prerequisiteSubtopicIds: ["equal_sharing_basics"],
       difficulty: "easy",
       estimatedMinutes: 10,
-      misconceptions: [
-        "1/2 means one piece out of any two pieces, even if unequal.",
-      ],
+      misconceptions: ["1/2 means one piece out of any two pieces, even if unequal."],
       examples: [
         "One chocolate broken into 2 equal bars, take one bar.",
         "A circle cut into two equal semicircles.",
@@ -60,9 +57,7 @@ export const c4HalvesSubtopicPack: TopicSubtopicPack = {
       prerequisiteSubtopicIds: ["equal_sharing_basics"],
       difficulty: "medium",
       estimatedMinutes: 10,
-      misconceptions: [
-        "Quarter means one of any four pieces, equal or unequal.",
-      ],
+      misconceptions: ["Quarter means one of any four pieces, equal or unequal."],
       examples: [
         "One pizza sliced into 4 equal slices, take one.",
         "A square folded into 4 equal small squares.",
@@ -105,3 +100,4 @@ export const c4HalvesSubtopicPack: TopicSubtopicPack = {
     overlapWarnings: [],
   },
 };
+

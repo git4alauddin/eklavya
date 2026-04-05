@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { learningQuests } from "../data/content";
+import { learningQuests } from "../data/contents";
 import { graphData, starterMastery } from "../graphData";
 import type { LearnerMastery } from "../types";
 
@@ -70,7 +70,7 @@ export function TopicCardsPage() {
     <section className="panel">
       <div className="sectionHead">
         <div className="sectionTitleWithBadge">
-          <h2>Math Learning Cards</h2>
+          <h2>Learning Cards</h2>
           <span className="resultCount">Total: {graphData.topics.length}</span>
         </div>
         <span className="pageStatus">Page {currentPage} of {totalPages}</span>
@@ -114,6 +114,7 @@ export function TopicCardsPage() {
             >
               <div className="cardTopicScopeRow">
                 <div className="cardTopicScopeBadge">{topic.mathTopic}</div>
+                <span className="subjectBadge">{topic.subject === "math" ? "MATHS" : topic.subject.toUpperCase()}</span>
                 <span className="gradeBadge">{topic.gradeBand}</span>
               </div>
               <div className="cardDivider" />
@@ -170,3 +171,11 @@ export function TopicCardsPage() {
     </section>
   );
 }
+
+
+
+
+
+
+
+

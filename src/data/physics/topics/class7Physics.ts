@@ -1,0 +1,58 @@
+﻿import type { TopicNode } from "../../../types";
+
+export const class7PhysicsTopics: TopicNode[] = [
+  {
+    id: "phy_c7_01_heat",
+    subject: "physics",
+    title: "Heat",
+    mathTopic: "Heat",
+    gradeBand: "G7",
+    description: "Heat transfer, temperature, and measurement with thermometers.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c7_02_weather_climate_and_adaptations",
+    subject: "physics",
+    title: "Weather, Climate and Adaptations of Animals to Climate",
+    mathTopic: "Weather and Climate",
+    gradeBand: "G7",
+    description: "Weather elements and climate patterns with adaptation context.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c7_03_wind_storm_and_cyclone",
+    subject: "physics",
+    title: "Wind, Storm and Cyclone",
+    mathTopic: "Air Pressure and Wind",
+    gradeBand: "G7",
+    description: "Air pressure, wind formation, and cyclone basics.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c7_04_motion_and_time",
+    subject: "physics",
+    title: "Motion and Time",
+    mathTopic: "Motion",
+    gradeBand: "G7",
+    description: "Speed, motion graphs, and time-based comparisons.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c7_05_electric_current_and_its_effects",
+    subject: "physics",
+    title: "Electric Current and Its Effects",
+    mathTopic: "Electric Current",
+    gradeBand: "G7",
+    description: "Heating and magnetic effects of electric current.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c7_06_light",
+    subject: "physics",
+    title: "Light",
+    mathTopic: "Light",
+    gradeBand: "G7",
+    description: "Reflection, images in mirrors, and lens introduction.",
+    source: "ncert",
+  },
+];
