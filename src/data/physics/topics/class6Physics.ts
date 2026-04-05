@@ -1,0 +1,58 @@
+﻿import type { TopicNode } from "../../../types";
+
+export const class6PhysicsTopics: TopicNode[] = [
+  {
+    id: "phy_c6_01_motion_and_measurement_of_distances",
+    subject: "physics",
+    title: "Motion and Measurement of Distances",
+    mathTopic: "Motion and Measurement",
+    gradeBand: "G6",
+    description: "Measuring distance and understanding types of motion in everyday life.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c6_02_light_shadows_and_reflections",
+    subject: "physics",
+    title: "Light, Shadows and Reflections",
+    mathTopic: "Light",
+    gradeBand: "G6",
+    description: "Sources of light, shadow formation, and simple reflections.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c6_03_electricity_and_circuits",
+    subject: "physics",
+    title: "Electricity and Circuits",
+    mathTopic: "Electricity",
+    gradeBand: "G6",
+    description: "Basic electric circuits, cells, bulbs, and conductors.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c6_04_fun_with_magnets",
+    subject: "physics",
+    title: "Fun with Magnets",
+    mathTopic: "Magnetism",
+    gradeBand: "G6",
+    description: "Properties of magnets and magnetic interactions.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c6_05_water",
+    subject: "physics",
+    title: "Water",
+    mathTopic: "Water and States of Matter",
+    gradeBand: "G6",
+    description: "Water cycle and forms of water in nature.",
+    source: "ncert",
+  },
+  {
+    id: "phy_c6_06_air_around_us",
+    subject: "physics",
+    title: "Air Around Us",
+    mathTopic: "Air and Atmosphere",
+    gradeBand: "G6",
+    description: "Composition and importance of air in our surroundings.",
+    source: "ncert",
+  },
+];

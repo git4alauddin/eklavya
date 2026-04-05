@@ -1,12 +1,16 @@
-import { graphData } from "../../graphData";
-import type { LearningQuest } from "../../types";
-import { class4HalvesQuest } from "./class4HalvesQuest";
+﻿import { graphData } from "../../graphData";
+import { mathLearningQuests } from "../math/contents";
+import { physicsLearningQuests } from "../physics/contents";
+import type { LearningQuest, TopicNode } from "../../types";
 
-export const learningQuests: LearningQuest[] = [class4HalvesQuest];
+export const learningQuests: LearningQuest[] = [
+  ...mathLearningQuests,
+  ...physicsLearningQuests,
+];
 
 export const validateLearningQuests = (
   quests: LearningQuest[],
-  allowedTopicIds = new Set(graphData.topics.map((topic) => topic.id)),
+  topicIndex = new Map<string, TopicNode>(graphData.topics.map((topic) => [topic.id, topic])),
 ): void => {
   const seenQuestIds = new Set<string>();
 
@@ -19,8 +23,14 @@ export const validateLearningQuests = (
     }
     seenQuestIds.add(quest.id);
 
-    if (!allowedTopicIds.has(quest.topicId)) {
+    const topic = topicIndex.get(quest.topicId);
+    if (!topic) {
       throw new Error(`Quest '${quest.id}' references unknown topic '${quest.topicId}'`);
+    }
+    if (quest.subject !== topic.subject) {
+      throw new Error(
+        `Quest '${quest.id}' subject '${quest.subject}' does not match topic '${quest.topicId}' subject '${topic.subject}'`,
+      );
     }
     if (quest.steps.length === 0) {
       throw new Error(`Quest '${quest.id}' must contain at least one step`);

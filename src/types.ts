@@ -1,7 +1,9 @@
-export type PrerequisiteType = "hard" | "soft";
+﻿export type PrerequisiteType = "hard" | "soft";
+export type Subject = "math" | "physics" | "chemistry";
 
 export type TopicNode = {
   id: string;
+  subject: Subject;
   title: string;
   mathTopic: string;
   gradeBand: string;
@@ -73,6 +75,7 @@ export type RewardBadge = {
 
 export type LearningQuest = {
   id: string;
+  subject: Subject;
   topicId: string;
   hook: string;
   learningGoals: string[];
@@ -105,6 +108,7 @@ export type TopicSubtopic = {
 };
 
 export type TopicSubtopicPack = {
+  subject: Subject;
   topicId: string;
   version: number;
   generatedAt: string;

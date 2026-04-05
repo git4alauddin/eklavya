@@ -1,7 +1,8 @@
-import type { LearningQuest } from "../../types";
+﻿import type { LearningQuest } from "../../../types";
 
 export const class4HalvesQuest: LearningQuest = {
   id: "quest_c4_halves_intro",
+  subject: "math",
   topicId: "c4_09_halves_and_quarters",
   hook: "A picnic group has 4 rotis and 8 kids. Can everyone get a fair share?",
   learningGoals: [
@@ -28,7 +29,8 @@ export const class4HalvesQuest: LearningQuest = {
       id: "s3_single_choice",
       type: "single-choice",
       title: "Choose The Correct Fraction",
-      prompt: "A circle is split into 4 equal parts and one part is shaded. Which fraction is shaded?",
+      prompt:
+        "A circle is split into 4 equal parts and one part is shaded. Which fraction is shaded?",
       choices: [
         { id: "c1", label: "1/2", feedback: "Check total equal parts." },
         { id: "c2", label: "1/4", correct: true, feedback: "Correct. 1 out of 4." },
@@ -63,3 +65,4 @@ export const class4HalvesQuest: LearningQuest = {
   },
   nextUnlockTopicIds: ["c5_04_parts_and_wholes"],
 };
+

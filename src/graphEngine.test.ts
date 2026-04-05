@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import {
   getNextSuggestions,
   getRoadmap,
@@ -9,10 +9,10 @@ import type { LearningGraph, LearnerMastery } from "./types";
 
 const baseGraph: LearningGraph = {
   topics: [
-    { id: "a", title: "A", mathTopic: "A Topic", gradeBand: "G4", description: "A" },
-    { id: "b", title: "B", mathTopic: "B Topic", gradeBand: "G4", description: "B" },
-    { id: "c", title: "C", mathTopic: "C Topic", gradeBand: "G4", description: "C" },
-    { id: "d", title: "D", mathTopic: "D Topic", gradeBand: "G4", description: "D" },
+    { id: "a", subject: "math", title: "A", mathTopic: "A Topic", gradeBand: "G4", description: "A" },
+    { id: "b", subject: "math", title: "B", mathTopic: "B Topic", gradeBand: "G4", description: "B" },
+    { id: "c", subject: "math", title: "C", mathTopic: "C Topic", gradeBand: "G4", description: "C" },
+    { id: "d", subject: "math", title: "D", mathTopic: "D Topic", gradeBand: "G4", description: "D" },
   ],
   edges: [
     { from: "a", to: "c", type: "hard", minMastery: 0.7 },
@@ -59,3 +59,4 @@ describe("roadmap and suggestions", () => {
     expect(suggestions[0].topicId).toBe("a");
   });
 });
+

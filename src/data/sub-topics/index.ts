@@ -1,18 +1,28 @@
-import { graphData } from "../../graphData";
-import type { TopicSubtopicPack } from "../../types";
-import { c4HalvesSubtopicPack } from "./c4HalvesSubtopics";
+﻿import { graphData } from "../../graphData";
+import { mathSubtopicPacks } from "../math/sub-topics";
+import { physicsSubtopicPacks } from "../physics/sub-topics";
+import type { TopicNode, TopicSubtopicPack } from "../../types";
 
-export const subtopicPacks: TopicSubtopicPack[] = [c4HalvesSubtopicPack];
+export const subtopicPacks: TopicSubtopicPack[] = [
+  ...mathSubtopicPacks,
+  ...physicsSubtopicPacks,
+];
 
 export const validateSubtopicPacks = (
   packs: TopicSubtopicPack[],
-  topicIdSet = new Set(graphData.topics.map((topic) => topic.id)),
+  topicIndex = new Map<string, TopicNode>(graphData.topics.map((topic) => [topic.id, topic])),
 ): void => {
   const seenPackTopics = new Set<string>();
 
   for (const pack of packs) {
-    if (!topicIdSet.has(pack.topicId)) {
+    const topic = topicIndex.get(pack.topicId);
+    if (!topic) {
       throw new Error(`Subtopic pack references unknown topic '${pack.topicId}'`);
+    }
+    if (pack.subject !== topic.subject) {
+      throw new Error(
+        `Subtopic pack '${pack.topicId}' subject '${pack.subject}' does not match topic subject '${topic.subject}'`,
+      );
     }
     if (seenPackTopics.has(pack.topicId)) {
       throw new Error(`Duplicate subtopic pack for topic '${pack.topicId}'`);

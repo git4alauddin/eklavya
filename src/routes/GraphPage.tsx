@@ -1,17 +1,20 @@
+﻿import { useMemo, useState } from "react";
+import { subjectLabels, supportedSubjects } from "../data/subjects";
 import { graphData } from "../graphData";
-import { useState } from "react";
+import type { DependencyEdge, Subject, TopicNode } from "../types";
 
 type Pos = { x: number; y: number };
+
 const clampLabel = (value: string, max = 26): string =>
   value.length > max ? `${value.slice(0, Math.max(0, max - 1))}\u2026` : value;
 
-const getLayout = () => {
-  const nodes = graphData.topics.map((t) => t.id);
+const getLayout = (topics: TopicNode[], edges: DependencyEdge[]) => {
+  const nodes = topics.map((t) => t.id);
   const indegree = new Map(nodes.map((id) => [id, 0]));
   const outgoing = new Map<string, string[]>();
   const incoming = new Map<string, string[]>();
 
-  for (const edge of graphData.edges) {
+  for (const edge of edges) {
     indegree.set(edge.to, (indegree.get(edge.to) ?? 0) + 1);
     outgoing.set(edge.from, [...(outgoing.get(edge.from) ?? []), edge.to]);
     incoming.set(edge.to, [...(incoming.get(edge.to) ?? []), edge.from]);
@@ -66,9 +69,36 @@ const getLayout = () => {
 };
 
 export function GraphPage() {
-  const { positions, width, height } = getLayout();
-  const topicById = new Map(graphData.topics.map((topic) => [topic.id, topic]));
+  const [selectedSubject, setSelectedSubject] = useState<Subject>("math");
   const [zoom, setZoom] = useState(1);
+
+  const filteredTopics = useMemo(
+    () => graphData.topics.filter((topic) => topic.subject === selectedSubject),
+    [selectedSubject],
+  );
+
+  const filteredTopicIds = useMemo(
+    () => new Set(filteredTopics.map((topic) => topic.id)),
+    [filteredTopics],
+  );
+
+  const filteredEdges = useMemo(
+    () =>
+      graphData.edges.filter(
+        (edge) => filteredTopicIds.has(edge.from) && filteredTopicIds.has(edge.to),
+      ),
+    [filteredTopicIds],
+  );
+
+  const { positions, width, height } = useMemo(
+    () => getLayout(filteredTopics, filteredEdges),
+    [filteredTopics, filteredEdges],
+  );
+
+  const topicById = useMemo(
+    () => new Map(filteredTopics.map((topic) => [topic.id, topic])),
+    [filteredTopics],
+  );
 
   const safeZoom = Math.max(0.45, Math.min(2.2, zoom));
   const renderWidth = Math.round(width * safeZoom);
@@ -76,8 +106,28 @@ export function GraphPage() {
 
   return (
     <section className="panel">
-      <h2>Complete Topic Graph</h2>
+      <div className="sectionHead">
+        <h2>Complete Topic Graph</h2>
+        <div className="subjectSwitchRow">
+          {supportedSubjects.map((subject) => (
+            <button
+              key={subject}
+              type="button"
+              className={`smallBtn subjectSwitchBtn ${selectedSubject === subject ? "active" : ""}`}
+              onClick={() => setSelectedSubject(subject)}
+            >
+              {subjectLabels[subject]}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <p className="muted">Blue edges are hard prerequisites. Dashed amber edges are soft links.</p>
+
+      {filteredTopics.length === 0 ? (
+        <p className="emptyState">No graph data added for {subjectLabels[selectedSubject]} yet.</p>
+      ) : null}
+
       <div className="graphToolbar">
         <button type="button" onClick={() => setZoom((z) => Math.max(0.45, z - 0.1))}>
           -
@@ -87,6 +137,7 @@ export function GraphPage() {
           +
         </button>
       </div>
+
       <div className="graphWrap">
         <svg
           className="graphSvg"
@@ -114,7 +165,8 @@ export function GraphPage() {
               <feDropShadow dx="0" dy="2" stdDeviation="2.2" floodColor="#000000" floodOpacity="0.35" />
             </filter>
           </defs>
-          {graphData.edges.map((edge) => {
+
+          {filteredEdges.map((edge) => {
             const from = positions.get(edge.from)!;
             const to = positions.get(edge.to)!;
             const x1 = from.x + 90;
@@ -138,7 +190,7 @@ export function GraphPage() {
             );
           })}
 
-          {graphData.topics.map((topic) => {
+          {filteredTopics.map((topic) => {
             const pos = positions.get(topic.id)!;
             const w = 210;
             const h = 74;

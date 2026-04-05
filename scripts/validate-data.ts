@@ -1,7 +1,7 @@
-import { graphData } from "../src/graphData";
+﻿import { graphData } from "../src/graphData";
 import { validateGraph } from "../src/graphEngine";
-import { learningQuests, validateLearningQuests } from "../src/data/content";
-import { subtopicPacks, validateSubtopicPacks } from "../src/data/subtopics";
+import { learningQuests, validateLearningQuests } from "../src/data/contents";
+import { subtopicPacks, validateSubtopicPacks } from "../src/data/sub-topics";
 
 try {
   validateGraph(graphData);
@@ -21,3 +21,4 @@ try {
   }
   process.exit(1);
 }
+

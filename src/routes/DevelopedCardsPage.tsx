@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { learningQuests } from "../data/content";
+import { learningQuests } from "../data/contents";
 import { graphData, starterMastery } from "../graphData";
 import type { LearnerMastery } from "../types";
 
@@ -169,3 +169,4 @@ export function DevelopedCardsPage() {
     </section>
   );
 }
+
