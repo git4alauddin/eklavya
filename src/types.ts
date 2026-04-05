@@ -36,3 +36,49 @@ export type Suggestion = {
   score: number;
   reason: string;
 };
+
+export type ContentStepType =
+  | "story"
+  | "concept"
+  | "single-choice"
+  | "multi-choice"
+  | "match"
+  | "reorder"
+  | "checkpoint"
+  | "reward";
+
+export type StepChoice = {
+  id: string;
+  label: string;
+  correct?: boolean;
+  feedback?: string;
+};
+
+export type ContentStep = {
+  id: string;
+  type: ContentStepType;
+  title: string;
+  prompt: string;
+  choices?: StepChoice[];
+  expectedOrder?: string[];
+  hints?: string[];
+  points?: number;
+};
+
+export type RewardBadge = {
+  id: string;
+  label: string;
+  description: string;
+};
+
+export type LearningQuest = {
+  id: string;
+  topicId: string;
+  hook: string;
+  learningGoals: string[];
+  estimatedMinutes: number;
+  steps: ContentStep[];
+  masteryCheckpointStepId: string;
+  reward: RewardBadge;
+  nextUnlockTopicIds: string[];
+};

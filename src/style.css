@@ -189,16 +189,25 @@ body {
 
 .hubSectionHead {
   padding-block: 10px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
 }
 
 .hubSectionBody {
   padding-block: 18px;
+  min-height: 96px;
+  display: flex;
+  align-items: center;
 }
 
 .hubSectionFoot {
   padding-block: 10px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 .hubDivider {
   height: 1px;
   background: var(--line-soft);
@@ -828,4 +837,76 @@ input[type="range"] {
 .scoreFill {
   height: 100%;
   background: linear-gradient(90deg, #d4a84a, #f0c86a);
+}
+
+.questCard {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #122035;
+  padding: 12px;
+}
+
+.questCard h3 {
+  margin: 0 0 6px;
+}
+
+.questHook {
+  margin: 0 0 10px;
+  color: #f0d89b;
+  font-size: 0.9rem;
+}
+
+.questHint {
+  margin: 8px 0;
+  color: #d8c48f;
+  font-size: 0.83rem;
+}
+
+.questChoiceGrid {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.questChoice {
+  text-align: left;
+  border: 1px solid #3b4f73;
+  border-radius: 9px;
+  background: #162338;
+  color: var(--text);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.questChoice.selected {
+  border-color: #d4a84a;
+  background: #2a2413;
+}
+
+.card.cardQuest {
+  cursor: pointer;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+.card.cardQuest:hover {
+  border-color: #5f7fab;
+  transform: translateY(-1px);
+}
+
+.card.cardQuest:focus-visible {
+  outline: 2px solid #d4a84a;
+  outline-offset: 2px;
+}
+
+
+
+
+
+
+
+.hubQuickRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
 }

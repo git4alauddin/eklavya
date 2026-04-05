@@ -20,10 +20,11 @@ export function HubPage() {
           <div className="hubDivider" />
           <div className="hubSection hubSectionFoot">
             <Link className="hubBtn" to="/planner">
-              Open Planner
+              Show component
             </Link>
           </div>
         </article>
+
         <article className="hubCard">
           <div className="hubSection hubSectionHead">
             <h3>Complete Graph Section</h3>
@@ -35,10 +36,11 @@ export function HubPage() {
           <div className="hubDivider" />
           <div className="hubSection hubSectionFoot">
             <Link className="hubBtn" to="/graph">
-              Open Graph
+              Show component
             </Link>
           </div>
         </article>
+
         <article className="hubCard">
           <div className="hubSection hubSectionHead">
             <h3>Math Learning Cards</h3>
@@ -50,7 +52,23 @@ export function HubPage() {
           <div className="hubDivider" />
           <div className="hubSection hubSectionFoot">
             <Link className="hubBtn" to="/topics">
-              Open Math Learning Cards
+              Show component
+            </Link>
+          </div>
+        </article>
+
+        <article className="hubCard">
+          <div className="hubSection hubSectionHead">
+            <h3>Developed Math Cards</h3>
+          </div>
+          <div className="hubDivider" />
+          <div className="hubSection hubSectionBody">
+            <p>demo developed math cards</p>
+          </div>
+          <div className="hubDivider" />
+          <div className="hubSection hubSectionFoot hubQuickRow">
+            <Link className="hubBtn" to="/topics">
+              Show component
             </Link>
           </div>
         </article>
