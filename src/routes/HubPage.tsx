@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 
 export function HubPage() {
   return (
@@ -11,7 +11,7 @@ export function HubPage() {
       <div className="hubGrid">
         <article className="hubCard">
           <div className="hubSection hubSectionHead">
-            <h3>Planner Section</h3>
+            <h3>Planner</h3>
           </div>
           <div className="hubDivider" />
           <div className="hubSection hubSectionBody">
@@ -27,7 +27,7 @@ export function HubPage() {
 
         <article className="hubCard">
           <div className="hubSection hubSectionHead">
-            <h3>Complete Graph Section</h3>
+            <h3>Graph</h3>
           </div>
           <div className="hubDivider" />
           <div className="hubSection hubSectionBody">
@@ -43,7 +43,7 @@ export function HubPage() {
 
         <article className="hubCard">
           <div className="hubSection hubSectionHead">
-            <h3>Math Learning Cards</h3>
+            <h3>Learning Cards</h3>
           </div>
           <div className="hubDivider" />
           <div className="hubSection hubSectionBody">
@@ -59,7 +59,7 @@ export function HubPage() {
 
         <article className="hubCard">
           <div className="hubSection hubSectionHead">
-            <h3>Developed Math Cards</h3>
+            <h3>Developed Cards</h3>
           </div>
           <div className="hubDivider" />
           <div className="hubSection hubSectionBody">
@@ -67,12 +67,29 @@ export function HubPage() {
           </div>
           <div className="hubDivider" />
           <div className="hubSection hubSectionFoot hubQuickRow">
-            <Link className="hubBtn" to="/topics">
+            <Link className="hubBtn" to="/developed-cards">
               Show component
             </Link>
+          </div>
+        </article>
+
+        <article className="hubCard">
+          <div className="hubSection hubSectionHead">
+            <h3>Human Review</h3>
+          </div>
+          <div className="hubDivider" />
+          <div className="hubSection hubSectionBody">
+            <p>Human-in-the-loop review for subtopics, approvals, and final updates.</p>
+          </div>
+          <div className="hubDivider" />
+          <div className="hubSection hubSectionFoot">
+            <Link className="hubBtn" to="/human-review">Show component</Link>
           </div>
         </article>
       </div>
     </section>
   );
 }
+
+
+

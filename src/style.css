@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg: #090d15;
   --bg-2: #0d1320;
   --panel: #111a2a;
@@ -909,4 +909,331 @@ input[type="range"] {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+.developedSplit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.learningGoalsWrap {
+  margin-top: 10px;
+}
+
+.learningGoalsWrap + .plannerMeta {
+  margin-top: 14px;
+}
+
+.learningGoalsWrap {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.learningGoalTag {
+  display: block;
+  border: 1px solid #3f5579;
+  background: linear-gradient(180deg, #172944 0%, #142338 100%);
+  color: #d7e4fb;
+  border-radius: 4px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  letter-spacing: 0.1px;
+}
+
+.learningActionRow {
+  margin-top: 16px;
+}
+
+.actionBtn {
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 4px;
+  padding: 7px 11px;
+  font-size: 0.83rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.actionBtnPrimary {
+  background: linear-gradient(135deg, #2a9d8f, #63c9b8);
+  border-color: #5db6aa;
+  color: #081713;
+}
+
+.actionBtnEasy {
+  background: #153229;
+  border-color: #2f6f5a;
+  color: #9de7cb;
+}
+
+.actionBtnMedium {
+  background: #3a2f12;
+  border-color: #8b6d34;
+  color: #f8d896;
+}
+
+.actionBtnHard {
+  background: #3a1a22;
+  border-color: #844454;
+  color: #ffc1cb;
+}
+
+.reviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.reviewCard {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #122035;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.reviewHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reviewHead h3 {
+  margin: 0 0 4px;
+}
+
+.reviewStatus {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.reviewStatus.draft {
+  border: 1px solid #8b6d34;
+  background: #3a2f12;
+  color: #f8d896;
+}
+
+.reviewStatus.approved {
+  border: 1px solid #2f6f5a;
+  background: #153229;
+  color: #9de7cb;
+}
+
+.reviewStatus.pending {
+  border: 1px solid #486a99;
+  background: #1a2a43;
+  color: #c8defd;
+}
+
+.reviewStatus.rejected {
+  border: 1px solid #844454;
+  background: #3a1a22;
+  color: #ffc1cb;
+}
+
+.reviewSubtopicList {
+  display: grid;
+  gap: 8px;
+}
+
+.reviewSubtopicRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reviewSubtopicActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.smallBtn.isActiveApprove {
+  border-color: #2f6f5a;
+  background: #153229;
+  color: #9de7cb;
+}
+
+.smallBtn.isActiveReject {
+  border-color: #844454;
+  background: #3a1a22;
+  color: #ffc1cb;
+}
+
+.reviewActionBtn {
+  border-radius: 7px;
+  padding: 6px 11px;
+  font-size: 0.78rem;
+  letter-spacing: 0.15px;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.reviewActionBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px #00000033;
+}
+
+.reviewActionApprove {
+  border-color: #3f826f;
+  background: linear-gradient(180deg, #17352d 0%, #122b24 100%);
+  color: #b7f0dd;
+}
+
+.reviewActionApprove:hover {
+  border-color: #55a58e;
+  background: linear-gradient(180deg, #1d4036 0%, #153229 100%);
+}
+
+.reviewActionReject {
+  border-color: #8d4d5d;
+  background: linear-gradient(180deg, #3d1c25 0%, #2f141b 100%);
+  color: #ffd0d7;
+}
+
+.reviewActionReject:hover {
+  border-color: #a85d70;
+  background: linear-gradient(180deg, #49202b 0%, #3a1a22 100%);
+}
+
+.smallBtn.reviewActionApprove.isActiveApprove {
+  border-color: #6fd4b8;
+  background: linear-gradient(180deg, #1f4a3e 0%, #18392f 100%);
+  color: #d7fff2;
+  box-shadow: inset 0 0 0 1px #9df0d766;
+}
+
+.smallBtn.reviewActionReject.isActiveReject {
+  border-color: #ff8aa2;
+  background: linear-gradient(180deg, #5a2532 0%, #451b25 100%);
+  color: #ffe5ea;
+  box-shadow: inset 0 0 0 1px #ffb5c566;
+}
+
+.reviewCard {
+  gap: 0;
+}
+
+.reviewSection {
+  padding: 10px 0;
+}
+
+.reviewSectionTop {
+  padding-top: 0;
+}
+
+.reviewSectionFoot {
+  padding-bottom: 0;
+}
+
+.reviewDivider {
+  height: 1px;
+  width: 100%;
+  background: var(--line-soft);
+}
+
+.reviewSectionFoot .plannerMeta {
+  margin-bottom: 0;
+}
+
+.reviewOpenBtn {
+  white-space: nowrap;
+}
+
+.reviewConfirmRow {
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.reviewConfirmBtn {
+  min-width: 120px;
+  border-color: #7d6737;
+  background: linear-gradient(135deg, #d4a84a, #f0c86a);
+  color: #1a1203;
+}
+
+.reviewSubtopicChip {
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.reviewSubtopicChipPending {
+  border-color: #4f7b9a;
+  background: #1c2f3f;
+  color: #cde8f7;
+}
+
+.reviewSubtopicChipApproved {
+  border-color: #3f826f;
+  background: #17352d;
+  color: #b7f0dd;
+}
+
+.reviewSubtopicChipRejected {
+  border-color: #8d4d5d;
+  background: #3d1c25;
+  color: #ffd0d7;
+}
+
+.reviewSubtopicChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reviewSubtopicMark {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.reviewSubtopicMarkPending {
+  border: 1px solid #5f86aa;
+  background: #253d58;
+  color: #cde8f7;
+}
+
+.reviewSubtopicMarkApproved {
+  border: 1px solid #4ea58d;
+  background: #205142;
+  color: #d7fff2;
+}
+
+.reviewSubtopicMarkRejected {
+  border: 1px solid #b8687c;
+  background: #5a2733;
+  color: #ffe5ea;
+}
+
+
+.reviewActionPending {
+  border-color: #5f86aa;
+  background: linear-gradient(180deg, #233a54 0%, #1c2f45 100%);
+  color: #cde8f7;
+}
+
+.reviewActionPending:hover {
+  border-color: #78a4cf;
+  background: linear-gradient(180deg, #294465 0%, #213752 100%);
+}
+
+.smallBtn.reviewActionPending.isActivePending {
+  border-color: #9ec9f0;
+  background: linear-gradient(180deg, #32557d 0%, #284568 100%);
+  color: #e7f4ff;
+  box-shadow: inset 0 0 0 1px #cae6ff66;
 }
