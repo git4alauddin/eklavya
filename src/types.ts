@@ -82,3 +82,37 @@ export type LearningQuest = {
   reward: RewardBadge;
   nextUnlockTopicIds: string[];
 };
+
+export type SubtopicDifficulty = "easy" | "medium" | "hard";
+
+export type SubtopicCheckpoint = {
+  id: string;
+  question: string;
+  answerType: "single-choice" | "multi-choice" | "short";
+  expectedAnswer: string;
+};
+
+export type TopicSubtopic = {
+  id: string;
+  name: string;
+  learningGoal: string;
+  prerequisiteSubtopicIds: string[];
+  difficulty: SubtopicDifficulty;
+  estimatedMinutes: number;
+  misconceptions: string[];
+  examples: string[];
+  checkpoints: SubtopicCheckpoint[];
+};
+
+export type TopicSubtopicPack = {
+  topicId: string;
+  version: number;
+  generatedAt: string;
+  source: "llm-draft" | "manual";
+  reviewStatus: "draft" | "approved";
+  subtopics: TopicSubtopic[];
+  coverageMap: {
+    missingCoreConcepts: string[];
+    overlapWarnings: string[];
+  };
+};

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { learningQuests } from "../data/content";
 import { graphData } from "../graphData";
 import type { ContentStep, StepChoice } from "../types";
@@ -54,6 +54,10 @@ const evaluateStep = (
 
 export function QuestPage() {
   const { topicId = "" } = useParams();
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get("mode");
+  const practiceMode = mode === "practice";
+
   const quest = useMemo(
     () => learningQuests.find((item) => item.topicId === topicId),
     [topicId],
@@ -62,6 +66,17 @@ export function QuestPage() {
   const [stepIndex, setStepIndex] = useState(0);
   const [selectedByStep, setSelectedByStep] = useState<Record<string, string[]>>({});
   const [resultsByStep, setResultsByStep] = useState<Record<string, CheckResult>>({});
+
+  useEffect(() => {
+    if (!quest) return;
+    const checkpointIndex = quest.steps.findIndex(
+      (step) => step.id === quest.masteryCheckpointStepId,
+    );
+    const startIndex = practiceMode && checkpointIndex >= 0 ? checkpointIndex : 0;
+    setStepIndex(startIndex);
+    setSelectedByStep({});
+    setResultsByStep({});
+  }, [quest, practiceMode]);
 
   if (!quest) {
     return (
@@ -102,7 +117,7 @@ export function QuestPage() {
     <section className="panel">
       <div className="sectionHead">
         <div className="sectionTitleWithBadge">
-          <h2>Quest Player</h2>
+          <h2>{practiceMode ? "Practice Mode" : "Quest Player"}</h2>
           <span className="resultCount">{quest.estimatedMinutes} min</span>
         </div>
         <span className="pageStatus">
