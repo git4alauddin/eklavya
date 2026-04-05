@@ -1528,3 +1528,18 @@ input[type="range"] {
 }
 
 
+.topicApprovalSubtopicWrap {
+  gap: 8px;
+}
+
+.topicApprovalSubtopicChip {
+  padding: 4px 9px;
+  font-size: 0.78rem;
+  border-radius: 999px;
+  line-height: 1.25;
+}
+.topicApprovalSubtopicChip.active {
+  border-color: #8db9ec;
+  background: #2b4b79;
+  color: #f2f8ff;
+}

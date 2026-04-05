@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
+import { subtopicPacks } from "../data/sub-topics";
 import { subjectLabels, supportedSubjects } from "../data/subjects";
 import { graphData } from "../graphData";
 import type { Subject } from "../types";
 
 type TopicReviewStatus = "pending" | "approved" | "rejected";
 
+const getSubtopicKey = (topicId: string, subtopicId: string) => `${topicId}::${subtopicId}`;
+
 export function TopicApprovalPage() {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [showSubtopics, setShowSubtopics] = useState(false);
+  const [selectedSubtopicId, setSelectedSubtopicId] = useState<string | null>(null);
 
   const groupedBySubject = useMemo(() => {
     const bySubject = new Map<Subject, Map<string, typeof graphData.topics>>();
@@ -50,17 +55,40 @@ export function TopicApprovalPage() {
   }, [groupedBySubject, selectedSubject, selectedGrade]);
 
   const [statusMap, setStatusMap] = useState<Record<string, TopicReviewStatus>>({});
+  const [subtopicStatusMap, setSubtopicStatusMap] = useState<Record<string, TopicReviewStatus>>({});
 
   useEffect(() => {
     setSelectedTopicId(null);
+    setShowSubtopics(false);
+    setSelectedSubtopicId(null);
   }, [selectedSubject, selectedGrade]);
+
+  useEffect(() => {
+    setShowSubtopics(false);
+    setSelectedSubtopicId(null);
+  }, [selectedTopicId]);
 
   const selectedTopic = useMemo(
     () => selectedTopics.find((topic) => topic.id === selectedTopicId) ?? null,
     [selectedTopicId, selectedTopics],
   );
 
+  const selectedTopicPack = useMemo(
+    () => (selectedTopic ? subtopicPacks.find((pack) => pack.topicId === selectedTopic.id) ?? null : null),
+    [selectedTopic],
+  );
+
+  const selectedSubtopic = useMemo(
+    () => selectedTopicPack?.subtopics.find((subtopic) => subtopic.id === selectedSubtopicId) ?? null,
+    [selectedSubtopicId, selectedTopicPack],
+  );
+
   const selectedTopicStatus = selectedTopic ? statusMap[selectedTopic.id] ?? "pending" : "pending";
+
+  const selectedSubtopicStatus =
+    selectedTopic && selectedSubtopic
+      ? subtopicStatusMap[getSubtopicKey(selectedTopic.id, selectedSubtopic.id)] ?? "pending"
+      : "pending";
 
   const gradeStatusCounts = useMemo(
     () =>
@@ -76,6 +104,23 @@ export function TopicApprovalPage() {
       ),
     [selectedTopics, statusMap],
   );
+
+  const subtopicStatusCounts = useMemo(() => {
+    if (!selectedTopic || !selectedTopicPack) {
+      return { approved: 0, rejected: 0, pending: 0 };
+    }
+
+    return selectedTopicPack.subtopics.reduce(
+      (acc, subtopic) => {
+        const status = subtopicStatusMap[getSubtopicKey(selectedTopic.id, subtopic.id)] ?? "pending";
+        if (status === "approved") acc.approved += 1;
+        if (status === "rejected") acc.rejected += 1;
+        if (status === "pending") acc.pending += 1;
+        return acc;
+      },
+      { approved: 0, rejected: 0, pending: 0 },
+    );
+  }, [selectedTopic, selectedTopicPack, subtopicStatusMap]);
 
   return (
     <section className="panel">
@@ -219,12 +264,103 @@ export function TopicApprovalPage() {
                       >
                         Pending
                       </button>
+                      <button
+                        className={`smallBtn reviewActionBtn ${showSubtopics ? "isActivePending" : ""}`}
+                        type="button"
+                        onClick={() => setShowSubtopics((prev) => !prev)}
+                      >
+                        Sub-topic Approval
+                      </button>
                       <span className="topicApprovalActionSpacer" />
                       <button className="smallBtn reviewOpenBtn" type="button">
                         Suggest me
                       </button>
                     </div>
                   </div>
+
+                  {showSubtopics ? (
+                    <>
+                      <div className="reviewDivider" />
+                      <div className="reviewSection">
+                        <div className="reviewHead">
+                          <h3 className="topicApprovalDetailTitle">Subtopics</h3>
+                          <div className="chipWrap">
+                            <span className="reviewStatus approved">Approved {subtopicStatusCounts.approved}</span>
+                            <span className="reviewStatus rejected">Rejected {subtopicStatusCounts.rejected}</span>
+                            <span className="reviewStatus pending">Pending {subtopicStatusCounts.pending}</span>
+                          </div>
+                        </div>
+                        {selectedTopicPack ? (
+                          <div className="chipWrap topicApprovalSubtopicWrap">
+                            {selectedTopicPack.subtopics.map((subtopic, idx) => (
+                              <button
+                                key={subtopic.id}
+                                type="button"
+                                className={`chip chipSoft reviewSubtopicChip topicApprovalSubtopicChip ${selectedSubtopicId === subtopic.id ? "active" : ""}`}
+                                onClick={() => setSelectedSubtopicId(subtopic.id)}
+                              >
+                                {idx + 1}. {subtopic.name}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="emptyState">No subtopic pack available for this topic yet.</p>
+                        )}
+                      </div>
+
+                      {selectedSubtopic ? (
+                        <>
+                          <div className="reviewDivider" />
+                          <div className="reviewSection reviewSectionFoot">
+                            <h3 className="topicApprovalDetailTitle">{selectedSubtopic.name}</h3>
+                            <p className="muted">{selectedSubtopic.learningGoal}</p>
+                            <div className="plannerMeta topicApprovalActionRow">
+                              <button
+                                className={`smallBtn reviewActionBtn reviewActionApprove ${selectedSubtopicStatus === "approved" ? "isActiveApprove" : ""}`}
+                                type="button"
+                                onClick={() =>
+                                  setSubtopicStatusMap((prev) => ({
+                                    ...prev,
+                                    [getSubtopicKey(selectedTopic.id, selectedSubtopic.id)]: "approved",
+                                  }))
+                                }
+                              >
+                                Approve
+                              </button>
+                              <button
+                                className={`smallBtn reviewActionBtn reviewActionReject ${selectedSubtopicStatus === "rejected" ? "isActiveReject" : ""}`}
+                                type="button"
+                                onClick={() =>
+                                  setSubtopicStatusMap((prev) => ({
+                                    ...prev,
+                                    [getSubtopicKey(selectedTopic.id, selectedSubtopic.id)]: "rejected",
+                                  }))
+                                }
+                              >
+                                Reject
+                              </button>
+                              <button
+                                className={`smallBtn reviewActionBtn reviewActionPending ${selectedSubtopicStatus === "pending" ? "isActivePending" : ""}`}
+                                type="button"
+                                onClick={() =>
+                                  setSubtopicStatusMap((prev) => ({
+                                    ...prev,
+                                    [getSubtopicKey(selectedTopic.id, selectedSubtopic.id)]: "pending",
+                                  }))
+                                }
+                              >
+                                Pending
+                              </button>
+                              <span className="topicApprovalActionSpacer" />
+                              <button className="smallBtn reviewOpenBtn" type="button">
+                                Suggest me
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      ) : null}
+                    </>
+                  ) : null}
                 </>
               ) : null}
             </article>
