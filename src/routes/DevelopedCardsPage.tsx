@@ -4,7 +4,7 @@ import { learningQuests } from "../data/content";
 import { graphData, starterMastery } from "../graphData";
 import type { LearnerMastery } from "../types";
 
-export function TopicCardsPage() {
+export function DevelopedCardsPage() {
   const navigate = useNavigate();
   const [mastery, setMastery] = useState<LearnerMastery>(starterMastery);
   const [search, setSearch] = useState("");
@@ -17,16 +17,21 @@ export function TopicCardsPage() {
     [],
   );
 
+  const developedTopics = useMemo(
+    () => graphData.topics.filter((topic) => questTopicIds.has(topic.id)),
+    [questTopicIds],
+  );
+
   const filteredTopics = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) {
-      return graphData.topics;
+      return developedTopics;
     }
-    return graphData.topics.filter((topic) => {
+    return developedTopics.filter((topic) => {
       const hay = `${topic.mathTopic} ${topic.title} ${topic.description} ${topic.gradeBand}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [search]);
+  }, [search, developedTopics]);
 
   const setTopicMastery = (topicId: string, value: number) => {
     const clamped = Math.max(0, Math.min(1, value));
@@ -70,8 +75,8 @@ export function TopicCardsPage() {
     <section className="panel">
       <div className="sectionHead">
         <div className="sectionTitleWithBadge">
-          <h2>Math Learning Cards</h2>
-          <span className="resultCount">Total: {graphData.topics.length}</span>
+          <h2>Developed Math Cards</h2>
+          <span className="resultCount">Total: {developedTopics.length}</span>
         </div>
         <span className="pageStatus">Page {currentPage} of {totalPages}</span>
       </div>
@@ -92,23 +97,17 @@ export function TopicCardsPage() {
         {pagedTopics.map((topic) => {
           const value = mastery[topic.id] ?? 0;
           const masteryLabel = value >= 0.75 ? "Strong" : value >= 0.45 ? "Developing" : "Needs Work";
-          const hasQuest = questTopicIds.has(topic.id);
           return (
             <article
-              className={hasQuest ? "card cardQuest" : "card"}
+              className="card cardQuest"
               key={topic.id}
-              role={hasQuest ? "button" : undefined}
-              tabIndex={hasQuest ? 0 : undefined}
-              onClick={() => {
-                if (hasQuest) {
-                  navigate(`/quest/${topic.id}`);
-                }
-              }}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/developed-card/${topic.id}`)}
               onKeyDown={(e) => {
-                if (!hasQuest) return;
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  navigate(`/quest/${topic.id}`);
+                  navigate(`/developed-card/${topic.id}`);
                 }
               }}
             >
@@ -120,7 +119,7 @@ export function TopicCardsPage() {
               <div className="cardSection sectionTitle">
                 <div className="cardTitleRow">
                   <h3>{topic.title}</h3>
-                  {hasQuest ? <span className="masteryBadge">Quest</span> : null}
+                  <span className="masteryBadge">Quest</span>
                 </div>
               </div>
               <div className="cardDivider" />
