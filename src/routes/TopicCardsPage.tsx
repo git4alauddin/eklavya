@@ -177,7 +177,7 @@ export function TopicCardsPage() {
               <div className="cardSection sectionTitle">
                 <div className="cardTitleRow">
                   <h3>{topic.title}</h3>
-                  {hasQuest ? <span className="masteryBadge">Quest</span> : null}
+                  {hasQuest ? <span className="masteryBadge">DEMO</span> : null}
                 </div>
               </div>
               <div className="cardDivider" />
@@ -227,4 +227,5 @@ export function TopicCardsPage() {
     </section>
   );
 }
+
 

@@ -1,13 +1,15 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { learningQuests } from "../data/contents";
+import { subjectLabels, supportedSubjects } from "../data/subjects";
 import { graphData, starterMastery } from "../graphData";
-import type { LearnerMastery } from "../types";
+import type { LearnerMastery, Subject } from "../types";
 
 export function DevelopedCardsPage() {
   const navigate = useNavigate();
   const [mastery, setMastery] = useState<LearnerMastery>(starterMastery);
   const [search, setSearch] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [cardsPerPage, setCardsPerPage] = useState(6);
   const cardGridRef = useRef<HTMLDivElement | null>(null);
@@ -24,14 +26,27 @@ export function DevelopedCardsPage() {
 
   const filteredTopics = useMemo(() => {
     const q = search.trim().toLowerCase();
+
+    const scopedTopics = selectedSubject
+      ? developedTopics.filter((topic) => topic.subject === selectedSubject)
+      : developedTopics;
+
     if (!q) {
-      return developedTopics;
+      return scopedTopics;
     }
-    return developedTopics.filter((topic) => {
+    return scopedTopics.filter((topic) => {
       const hay = `${topic.mathTopic} ${topic.title} ${topic.description} ${topic.gradeBand}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [search, developedTopics]);
+  }, [search, selectedSubject, developedTopics]);
+
+  const totalInScope = useMemo(
+    () =>
+      selectedSubject
+        ? developedTopics.filter((topic) => topic.subject === selectedSubject).length
+        : developedTopics.length,
+    [selectedSubject, developedTopics],
+  );
 
   const setTopicMastery = (topicId: string, value: number) => {
     const clamped = Math.max(0, Math.min(1, value));
@@ -58,7 +73,7 @@ export function DevelopedCardsPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, selectedSubject]);
 
   const totalPages = Math.max(1, Math.ceil(filteredTopics.length / cardsPerPage));
 
@@ -75,10 +90,24 @@ export function DevelopedCardsPage() {
     <section className="panel">
       <div className="sectionHead">
         <div className="sectionTitleWithBadge">
-          <h2>Developed Math Cards</h2>
-          <span className="resultCount">Total: {developedTopics.length}</span>
+          <h2>Developed Cards</h2>
+          <span className="resultCount">Total: {totalInScope}</span>
         </div>
-        <span className="pageStatus">Page {currentPage} of {totalPages}</span>
+        <div className="sectionHeadRight">
+          <div className="subjectSwitchRow">
+            {(["all", ...supportedSubjects] as const).map((subject) => (
+              <button
+                key={subject}
+                type="button"
+                className={`smallBtn subjectSwitchBtn compact ${subject !== "all" ? "subjectSwitchBtnBlue" : ""} ${selectedSubject === subject ? "active" : ""}`}
+                onClick={() => setSelectedSubject(subject === "all" ? null : (subject as Subject))}
+              >
+                {subject === "all" ? "ALL" : subjectLabels[subject]}
+              </button>
+            ))}
+          </div>
+          <span className="pageStatus">Page {currentPage} of {totalPages}</span>
+        </div>
       </div>
       <div className="searchRow">
         <input
@@ -88,7 +117,14 @@ export function DevelopedCardsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button type="button" className="smallBtn" onClick={() => setSearch("")}>
+        <button
+          type="button"
+          className="smallBtn"
+          onClick={() => {
+            setSearch("");
+            setSelectedSubject(null);
+          }}
+        >
           Clear
         </button>
       </div>
@@ -113,13 +149,14 @@ export function DevelopedCardsPage() {
             >
               <div className="cardTopicScopeRow">
                 <div className="cardTopicScopeBadge">{topic.mathTopic}</div>
+                <span className="subjectBadge">{topic.subject === "math" ? "MATHS" : topic.subject.toUpperCase()}</span>
                 <span className="gradeBadge">{topic.gradeBand}</span>
               </div>
               <div className="cardDivider" />
               <div className="cardSection sectionTitle">
                 <div className="cardTitleRow">
                   <h3>{topic.title}</h3>
-                  <span className="masteryBadge">Quest</span>
+                  <span className="masteryBadge">DEMO</span>
                 </div>
               </div>
               <div className="cardDivider" />
@@ -169,4 +206,3 @@ export function DevelopedCardsPage() {
     </section>
   );
 }
-
