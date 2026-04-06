@@ -2281,3 +2281,341 @@ input[type="range"] {
   font-size: 0.84rem;
   line-height: 1.35;
 }
+
+.llmActionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.llmActionCard {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #122035;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.llmActionCard h3 {
+  margin: 0;
+}
+
+.llmActionCard .smallBtn {
+  justify-self: start;
+}
+
+.llmLogWrap {
+  margin-top: 10px;
+}
+
+.llmLogWrap h3 {
+  margin: 0 0 8px;
+}
+
+.llmLatest {
+  margin: 0 0 8px;
+  color: #f0d89b;
+  font-size: 0.84rem;
+}
+
+.llmLogList {
+  display: grid;
+  gap: 7px;
+}
+
+.llmLogItem {
+  margin: 0;
+  border: 1px solid var(--line-soft);
+  background: #111c2e;
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 0.82rem;
+}
+
+.llmLogItem.ok {
+  border-color: #2f6f5a;
+  color: #9de7cb;
+}
+
+.llmLogItem.pending {
+  border-color: #4f7b9a;
+  color: #cde8f7;
+}
+
+.llmLogTime {
+  color: #f0d89b;
+}
+
+.llmHeader {
+  align-items: flex-start;
+}
+
+.llmHeaderBadges {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.llmActionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.llmActionCard {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #122035;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.llmActionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.llmActionCard h3 {
+  margin: 0;
+}
+
+.llmActionCard .smallBtn {
+  justify-self: start;
+}
+
+.llmLogWrap {
+  margin-top: 12px;
+}
+
+.llmTraceHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.llmTraceHead h3 {
+  margin: 0;
+}
+
+.llmLatest {
+  margin: 0;
+  color: #f0d89b;
+  font-size: 0.84rem;
+}
+
+.llmLogList {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.llmLogEmpty {
+  margin: 0;
+  border: 1px dashed #4f7b9a;
+  border-radius: 8px;
+  background: #111c2e;
+  color: #cde8f7;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+}
+
+.llmLogItem {
+  margin: 0;
+  border: 1px solid var(--line-soft);
+  background: #111c2e;
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 0.82rem;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.llmLogItem.ok {
+  border-color: #2f6f5a;
+  color: #9de7cb;
+}
+
+.llmLogItem.pending {
+  border-color: #4f7b9a;
+  color: #cde8f7;
+}
+
+.llmLogTime {
+  color: #f0d89b;
+}
+
+.llmLogLabel {
+  color: #f2e4be;
+  font-weight: 500;
+}
+
+.llmLogDetail {
+  color: inherit;
+}
+
+@media (max-width: 680px) {
+  .llmActionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .llmLogItem {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+.llmFlowWrap {
+  margin-top: 12px;
+}
+
+.llmStepList {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.llmStepCard {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #111c2e;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.llmStepHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.llmStepHead h4 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.llmStepStatus {
+  border-radius: 999px;
+  border: 1px solid #4f7b9a;
+  background: #1c2f3f;
+  color: #cde8f7;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  text-transform: capitalize;
+}
+
+.llmStepStatus.running {
+  border-color: #8a6c36;
+  background: #3a2d12;
+  color: #f3dfb3;
+}
+
+.llmStepStatus.done {
+  border-color: #2f6f5a;
+  background: #153229;
+  color: #9de7cb;
+}
+
+.llmStepFile {
+  margin: 0;
+  color: #f0d89b;
+  font-size: 0.78rem;
+}
+
+.llmCodeBlock,
+.llmDataBlock {
+  border: 1px solid var(--line-soft);
+  background: #0f1828;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.llmBlockLabel {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  color: #9ec9f0;
+}
+
+.llmCodeBlock pre,
+.llmDataBlock pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.76rem;
+  color: #d7e4fb;
+}
+
+.llmDataGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+.llmActionCard.expanded {
+  border-color: #5f7fab;
+}
+
+.llmActionBtns {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.llmStubDetails {
+  border: 1px dashed #4f7b9a;
+  border-radius: 8px;
+  background: #111c2e;
+  padding: 8px 10px;
+}
+
+.llmActionCard {
+  padding: 0;
+  gap: 0;
+}
+
+.llmActionSection {
+  padding-inline: 12px;
+}
+
+.llmActionSectionHead {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  padding-block: 10px;
+}
+
+.llmActionSectionBody {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  padding-block: 12px;
+}
+
+.llmActionSectionFoot {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 10px;
+}
+
+.llmActionDivider {
+  height: 1px;
+  background: var(--line-soft);
+  margin-inline: 12px;
+}
+
+.llmActionSectionFoot .llmActionBtns {
+  justify-content: center;
+}

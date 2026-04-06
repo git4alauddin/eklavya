@@ -7,6 +7,7 @@ import { DevelopedCardsPage } from "./routes/DevelopedCardsPage";
 import { GraphPage } from "./routes/GraphPage";
 import { HubPage } from "./routes/HubPage";
 import { HumanReviewHubPage } from "./routes/HumanReviewHubPage";
+import { LlmIntegrationPage } from "./routes/LlmIntegrationPage";
 import { PlannerPage } from "./routes/PlannerPage";
 import { PrerequisiteApprovalPage } from "./routes/PrerequisiteApprovalPage";
 import { QuestPage } from "./routes/QuestPage";
@@ -26,6 +27,7 @@ ReactDOM.createRoot(document.getElementById("app")!).render(
           <Route path="developed-card/:topicId" element={<DevelopedCardDetailPage />} />
           <Route path="graph" element={<GraphPage />} />
           <Route path="human-review" element={<HumanReviewHubPage />} />
+          <Route path="llm-integration" element={<LlmIntegrationPage />} />
           <Route path="human-review/topic-approval" element={<TopicApprovalPage />} />
           <Route path="human-review/subtopic-approval" element={<SubtopicReviewPage />} />
           <Route

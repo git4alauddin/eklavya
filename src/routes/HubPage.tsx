@@ -86,10 +86,25 @@ export function HubPage() {
             <Link className="hubBtn" to="/human-review">Show component</Link>
           </div>
         </article>
+      
+        <article className="hubCard">
+          <div className="hubSection hubSectionHead">
+            <h3>LLM Integration</h3>
+          </div>
+          <div className="hubDivider" />
+          <div className="hubSection hubSectionBody">
+            <p>Mock call console for learning/practice generation and ingest tracing.</p>
+          </div>
+          <div className="hubDivider" />
+          <div className="hubSection hubSectionFoot">
+            <Link className="hubBtn" to="/llm-integration">Show component</Link>
+          </div>
+        </article>
       </div>
     </section>
   );
 }
+
 
 
 
