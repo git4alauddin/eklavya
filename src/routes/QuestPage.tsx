@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { learningQuests } from "../data/contents";
 import { graphData } from "../graphData";
 import { getPracticeQuestions } from "../services/practiceService";
+import { topicSnapshots } from "../data/snapshots";
 import type { ContentStep, PracticeDifficulty, PracticeQuestion, StepChoice } from "../types";
 
 type CheckResult = {
@@ -10,6 +11,11 @@ type CheckResult = {
   correct: boolean;
   earned: number;
   feedback: string;
+};
+
+type LoadingInsight = {
+  kind: "FACT" | "THINK" | "AVOID";
+  text: string;
 };
 
 const getStepPoints = (step: ContentStep): number => step.points ?? 10;
@@ -56,6 +62,30 @@ const getQuestionPoints = (difficulty: PracticeDifficulty): number => {
   if (difficulty === "hard") return 20;
   if (difficulty === "medium") return 15;
   return 10;
+};
+
+const getDemoLocalMinLoadingMs = (): number => {
+  const raw = Number(import.meta.env.VITE_DEMO_LOCAL_LOADING_MS ?? 2200);
+  if (!Number.isFinite(raw) || raw < 0) return 0;
+  return Math.floor(raw);
+};
+
+const getLoadingFactRotateMs = (): number => {
+  const raw = Number(import.meta.env.VITE_LOADING_FACT_ROTATE_MS ?? 2200);
+  if (!Number.isFinite(raw) || raw < 300) return 2200;
+  return Math.floor(raw);
+};
+
+const getNextPracticeDifficulty = (difficulty: PracticeDifficulty): PracticeDifficulty | null => {
+  if (difficulty === "easy") return "medium";
+  if (difficulty === "medium") return "hard";
+  return null;
+};
+
+const getDifficultyBadgeClass = (difficulty: PracticeDifficulty): string => {
+  if (difficulty === "easy") return "difficultyEasy";
+  if (difficulty === "medium") return "difficultyMedium";
+  return "difficultyHard";
 };
 
 const getCorrectAnswerText = (question: PracticeQuestion): string => {
@@ -106,12 +136,58 @@ const evaluatePracticeQuestion = (
   };
 };
 
+const practiceWarmupBullets: Record<PracticeDifficulty, string[]> = {
+  easy: [
+    "Build confidence with direct and foundational questions.",
+    "Focus on core patterns and clean basic reasoning.",
+    "Great for warming up before timed attempts.",
+  ],
+  medium: [
+    "Mix of concept checks and small application twists.",
+    "You may need one extra reasoning step before answering.",
+    "Best level to improve consistency and accuracy.",
+  ],
+  hard: [
+    "Multi-step reasoning with fewer obvious clues.",
+    "Requires precision and careful elimination.",
+    "Designed to stretch mastery under challenge.",
+  ],
+};
+
 export function QuestPage() {
   const { topicId = "" } = useParams();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const mode = searchParams.get("mode");
   const practiceMode = mode === "practice";
   const practiceDifficulty = normalizeDifficulty(searchParams.get("level"));
+
+  const loadingInsights = useMemo<LoadingInsight[]>(() => {
+    const snapshot = topicSnapshots.find((item) => item.topicId === topicId);
+
+    const facts = (snapshot?.keyFacts ?? practiceWarmupBullets[practiceDifficulty])
+      .filter((item) => item.trim())
+      .map((text) => ({ kind: "FACT" as const, text }));
+
+    const remembers = (snapshot?.revisePrompts ?? [])
+      .filter((item) => item.trim())
+      .map((text) => ({ kind: "THINK" as const, text }));
+
+    const avoids = (snapshot?.commonMistakes ?? [])
+      .filter((item) => item.trim())
+      .map((text) => ({ kind: "AVOID" as const, text }));
+
+    const combined = [...facts, ...remembers, ...avoids];
+    if (combined.length === 0) {
+      return [{ kind: "FACT", text: "Preparing your practice set..." }];
+    }
+
+    // Randomize order per load so the experience feels dynamic.
+    const shuffled = [...combined].sort(() => Math.random() - 0.5);
+    return shuffled;
+  }, [topicId, practiceDifficulty]);
+
+
 
   const quest = useMemo(() => learningQuests.find((item) => item.topicId === topicId), [topicId]);
 
@@ -126,6 +202,9 @@ export function QuestPage() {
   const [selectedByQuestion, setSelectedByQuestion] = useState<Record<string, string[]>>({});
   const [answerByQuestion, setAnswerByQuestion] = useState<Record<string, string>>({});
   const [resultsByQuestion, setResultsByQuestion] = useState<Record<string, CheckResult>>({});
+  const [practiceReloadKey, setPracticeReloadKey] = useState(0);
+  const [loadingFactIndex, setLoadingFactIndex] = useState(0);
+  const [loadedPracticeDifficulty, setLoadedPracticeDifficulty] = useState<PracticeDifficulty | null>(null);
 
   useEffect(() => {
     if (!quest || practiceMode) return;
@@ -143,7 +222,14 @@ export function QuestPage() {
     const load = async () => {
       setPracticeLoading(true);
       setPracticeError("");
+      setLoadedPracticeDifficulty(null);
+      setPracticeQuestions([]);
+      setPracticeIndex(0);
+      setSelectedByQuestion({});
+      setAnswerByQuestion({});
+      setResultsByQuestion({});
       try {
+        const loadStartedAt = Date.now();
         const session = await getPracticeQuestions({
           topicId,
           difficulty: practiceDifficulty,
@@ -151,11 +237,28 @@ export function QuestPage() {
         });
 
         if (cancelled) return;
+
+        const isLocalBackedSource =
+          session.source === "local-only" ||
+          session.source === "local+cache" ||
+          session.source === "cache-only";
+
+        if (isLocalBackedSource) {
+          const minMs = getDemoLocalMinLoadingMs();
+          const elapsed = Date.now() - loadStartedAt;
+          const waitMs = Math.max(0, minMs - elapsed);
+          if (waitMs > 0) {
+            await new Promise<void>((resolve) => window.setTimeout(resolve, waitMs));
+            if (cancelled) return;
+          }
+        }
+
         setPracticeQuestions(session.questions);
         setPracticeIndex(0);
         setSelectedByQuestion({});
         setAnswerByQuestion({});
         setResultsByQuestion({});
+        setLoadedPracticeDifficulty(practiceDifficulty);
       } catch (error) {
         if (cancelled) return;
         const message = error instanceof Error ? error.message : "Failed to load practice questions.";
@@ -172,7 +275,49 @@ export function QuestPage() {
     return () => {
       cancelled = true;
     };
-  }, [practiceMode, topicId, practiceDifficulty]);
+  }, [practiceMode, topicId, practiceDifficulty, practiceReloadKey]);
+
+  useEffect(() => {
+    if (!practiceMode || !practiceLoading) return;
+    setLoadingFactIndex(0);
+    if (loadingInsights.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setLoadingFactIndex((prev) => (prev + 1) % loadingInsights.length);
+    }, getLoadingFactRotateMs());
+    return () => window.clearInterval(timer);
+  }, [practiceMode, practiceLoading, loadingInsights]);
+
+  useEffect(() => {
+    if (!practiceMode || practiceLoading || practiceError) return;
+    if (loadedPracticeDifficulty !== practiceDifficulty) return;
+    if (practiceQuestions.length === 0) return;
+
+    const answeredCount = Object.keys(resultsByQuestion).length;
+    if (answeredCount !== practiceQuestions.length) return;
+
+    const totalEarnedNow = Object.values(resultsByQuestion).reduce((sum, item) => sum + item.earned, 0);
+    const totalPossibleNow = practiceQuestions.reduce((sum, item) => sum + getQuestionPoints(item.difficulty), 0);
+    if (totalPossibleNow <= 0 || totalEarnedNow !== totalPossibleNow) return;
+
+    const nextDifficulty = getNextPracticeDifficulty(practiceDifficulty);
+    if (!nextDifficulty) return;
+
+    // Perfect-score progression: auto-move to the next level.
+    const timer = window.setTimeout(() => {
+      navigate("?mode=practice&level=" + nextDifficulty, { replace: true });
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    practiceMode,
+    practiceLoading,
+    practiceError,
+    practiceQuestions,
+    resultsByQuestion,
+    practiceDifficulty,
+    loadedPracticeDifficulty,
+    navigate,
+  ]);
 
   if (practiceMode) {
     const topic = graphData.topics.find((item) => item.id === topicId);
@@ -192,10 +337,14 @@ export function QuestPage() {
     }
 
     if (practiceLoading) {
+      const activeInsight = loadingInsights[loadingFactIndex] ?? { kind: "FACT", text: "Preparing your practice set..." };
       return (
         <section className="panel">
-          <h2>Practice Mode</h2>
-          <p className="emptyState">Loading questions...</p>
+          <article className="questCard practiceWarmupCard">
+            <div className="practiceWarmupList">
+              <p key={`${activeInsight.kind}:${activeInsight.text}`}><span className="practiceInsightTag">{activeInsight.kind}</span> {activeInsight.text}</p>
+            </div>
+          </article>
         </section>
       );
     }
@@ -206,6 +355,15 @@ export function QuestPage() {
           <h2>Practice Mode</h2>
           <p className="emptyState">{practiceError}</p>
           <div className="plannerMeta">
+            <button
+              type="button"
+              className="smallBtn"
+              onClick={() => {
+                setPracticeReloadKey((k) => k + 1);
+              }}
+            >
+              Retry
+            </button>
             <Link className="smallBtn" to="/topics">
               Back To Topics
             </Link>
@@ -235,7 +393,6 @@ export function QuestPage() {
     const totalEarned = Object.values(resultsByQuestion).reduce((sum, item) => sum + item.earned, 0);
     const totalPossible = practiceQuestions.reduce((sum, item) => sum + getQuestionPoints(item.difficulty), 0);
 
-    const isLastQuestion = practiceIndex === practiceQuestions.length - 1;
     const canSubmitPractice =
       question.type === "short" ? shortAnswer.trim().length > 0 : selectedChoices.length > 0;
 
@@ -254,12 +411,14 @@ export function QuestPage() {
         (item): item is { index: number; question: PracticeQuestion; result: CheckResult } => item !== null,
       );
 
+    const isPracticeComplete = answeredProgress.length === practiceQuestions.length;
+
     return (
       <section className="panel">
         <div className="sectionHead practiceHead">
           <div className="sectionTitleWithBadge">
             <h2>Practice Mode</h2>
-            <span className="resultCount">{practiceDifficulty.toUpperCase()}</span>
+            <span className={`resultCount ${getDifficultyBadgeClass(practiceDifficulty)}`}>{practiceDifficulty.toUpperCase()}</span>
           </div>
           <p className="practiceTopicInline">{topic.title} | {topic.mathTopic}</p>
           <span className="pageStatus">
@@ -315,23 +474,44 @@ export function QuestPage() {
             </div>
           )}
 
-          <div className="plannerMeta practiceSubmitRow">
-            <button
-              type="button"
-              className="smallBtn"
-              onClick={() => {
-                if (!canSubmitPractice) return;
-                const evaluated =
-                  question.type === "short"
-                    ? evaluatePracticeQuestion(question, [], shortAnswer)
-                    : evaluatePracticeQuestion(question, selectedChoices, shortAnswer);
-                commitPracticeResult(evaluated);
-              }}
-              disabled={!canSubmitPractice}
-            >
-              Submit
-            </button>
-          </div>
+          {!isPracticeComplete ? (
+            <div className="plannerMeta practiceSubmitRow">
+              <button
+                type="button"
+                className="smallBtn"
+                onClick={() => {
+                  if (!canSubmitPractice) return;
+                  const evaluated =
+                    question.type === "short"
+                      ? evaluatePracticeQuestion(question, [], shortAnswer)
+                      : evaluatePracticeQuestion(question, selectedChoices, shortAnswer);
+                  commitPracticeResult(evaluated);
+                }}
+                disabled={!canSubmitPractice}
+              >
+                Submit
+              </button>
+            </div>
+          ) : (
+            <div className="practiceLiveResult">
+              <div className="practiceScoreWrap">
+                <span className={totalEarned === totalPossible ? "practiceScoreBadge perfect" : "practiceScoreBadge notPerfect"}>
+                  Score: {totalEarned}/{totalPossible}
+                </span>
+              </div>
+              {totalEarned === totalPossible ? (
+                <p className="muted">Perfect score unlocked. Moving to next level...</p>
+              ) : null}
+              <div className="plannerMeta practiceResultActions">
+                <Link className="smallBtn practiceResultBtn" to="/topics">
+                  Back To Topics
+                </Link>
+                <Link className="smallBtn practiceResultBtn" to="/planner">
+                  Back To Planner
+                </Link>
+              </div>
+            </div>
+          )}
         </article>
 
         <article className="plannerViz practiceLiveViz">
@@ -355,22 +535,7 @@ export function QuestPage() {
               ))}
             </div>
           )}
-                            {isLastQuestion ? (
-            <div className="practiceLiveResult">
-              <div className="practiceScoreWrap">
-                <span className="practiceScoreBadge">Score: {totalEarned}/{totalPossible}</span>
-              </div>
-              <div className="plannerMeta practiceResultActions">
-                <Link className="smallBtn practiceResultBtn" to="/topics">
-                  Back To Topics
-                </Link>
-                <Link className="smallBtn practiceResultBtn" to="/planner">
-                  Back To Planner
-                </Link>
-              </div>
-            </div>
-          ) : null}
-        </article>
+</article>
       </section>
     );
   }
@@ -504,6 +669,16 @@ export function QuestPage() {
     </section>
   );
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

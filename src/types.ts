@@ -151,3 +151,15 @@ export type PracticePack = {
   source: "llm-draft" | "manual";
   questions: PracticeQuestion[];
 };
+
+export type TopicSnapshotPack = {
+  subject: Subject;
+  topicId: string;
+  version: number;
+  generatedAt: string;
+  source: "llm-draft" | "manual";
+  quickSummary: string;
+  keyFacts: string[];
+  revisePrompts: string[];
+  commonMistakes: string[];
+};

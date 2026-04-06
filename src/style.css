@@ -1748,7 +1748,17 @@ input[type="range"] {
 }
 
 
-.practiceLiveResult {
+.practiceScoreBadge.perfect {
+  border-color: #3a8f76;
+  background: #12362d;
+  color: #a8f7d7;
+}
+
+.practiceScoreBadge.notPerfect {
+  border-color: #9a4656;
+  background: #3a1b22;
+  color: #ffc6d0;
+}`r`n.practiceLiveResult {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--line-soft);
@@ -1763,3 +1773,70 @@ input[type="range"] {
 .practiceSubmitRow .smallBtn {
   min-width: 110px;
 }
+
+
+.practiceWarmupCard {
+  border: 1px solid var(--line);
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+}
+
+.practiceWarmupList {
+  margin: 0;
+  padding: 0;
+  color: #d7e4fb;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-size: 0.92rem;
+  max-width: 640px;
+}
+
+.practiceWarmupList li {
+  line-height: 1.35;
+}
+
+
+.practiceWarmupList p {
+  margin: 0;
+  color: #d7e4fb;
+  line-height: 1.45;
+}
+
+
+.practiceInsightTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #4f7b9a;
+  background: #1c2f3f;
+  color: #cde8f7;
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  margin-right: 8px;
+  letter-spacing: 0.2px;
+}
+
+
+.resultCount.difficultyEasy {
+  border-color: #3a8f76;
+  background: #12362d;
+  color: #a8f7d7;
+}
+
+.resultCount.difficultyMedium {
+  border-color: #d9a94a;
+  background: #4a360f;
+  color: #ffecbf;
+}
+
+.resultCount.difficultyHard {
+  border-color: #9a4656;
+  background: #3a1b22;
+  color: #ffc6d0;
+}
+
+
+
