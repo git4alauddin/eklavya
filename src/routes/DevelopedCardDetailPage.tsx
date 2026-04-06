@@ -1,4 +1,4 @@
-﻿import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { learningQuests } from "../data/contents";
 import { subtopicPacks } from "../data/sub-topics";
 import { graphData } from "../graphData";
@@ -24,16 +24,19 @@ export function DevelopedCardDetailPage() {
   }
 
   const checkpoint = quest.steps.find((step) => step.id === quest.masteryCheckpointStepId);
+  const subjectLabel = topic.subject === "math" ? "MATHS" : topic.subject.toUpperCase();
 
   return (
     <section className="panel">
       <div className="sectionHead">
         <div className="sectionTitleWithBadge">
           <h2>{topic.title}</h2>
+          <span className="subjectBadge">{subjectLabel}</span>
           <span className="resultCount">{topic.gradeBand}</span>
         </div>
       </div>
       <p className="muted">{topic.mathTopic}</p>
+      <div className="sectionDivider" />
 
       <div className="developedSplit">
         <article className="plannerViz">
@@ -78,4 +81,5 @@ export function DevelopedCardDetailPage() {
     </section>
   );
 }
+
 

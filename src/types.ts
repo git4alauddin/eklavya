@@ -1,4 +1,4 @@
-﻿export type PrerequisiteType = "hard" | "soft";
+export type PrerequisiteType = "hard" | "soft";
 export type Subject = "math" | "physics" | "chemistry";
 
 export type TopicNode = {
@@ -119,4 +119,35 @@ export type TopicSubtopicPack = {
     missingCoreConcepts: string[];
     overlapWarnings: string[];
   };
+};
+
+export type PracticeDifficulty = "easy" | "medium" | "hard";
+
+export type PracticeQuestionType = "single-choice" | "multi-choice" | "short";
+
+export type PracticeOption = {
+  id: string;
+  text: string;
+};
+
+export type PracticeQuestion = {
+  id: string;
+  topicId: string;
+  difficulty: PracticeDifficulty;
+  type: PracticeQuestionType;
+  prompt: string;
+  options?: PracticeOption[];
+  correctOptionIds?: string[];
+  correctText?: string;
+  explanation: string;
+  skillTag: string;
+};
+
+export type PracticePack = {
+  subject: Subject;
+  topicId: string;
+  version: number;
+  generatedAt: string;
+  source: "llm-draft" | "manual";
+  questions: PracticeQuestion[];
 };
