@@ -1,4 +1,4 @@
-﻿import type { LearningQuest } from "../../../types";
+import type { LearningQuest } from "../../../types";
 
 export const class4HalvesQuest: LearningQuest = {
   id: "quest_c4_halves_intro",
@@ -18,6 +18,11 @@ export const class4HalvesQuest: LearningQuest = {
       title: "Picnic Sharing",
       prompt: "Two friends split one roti equally. What part does each get?",
       hints: ["Equal share means same size pieces."],
+      adaptiveHints: {
+        firstTry: "Equal share means same size pieces.",
+        secondTry: "Check that both pieces are exactly equal before naming the fraction.",
+        recap: "When 1 whole is split into 2 equal pieces, each piece is one-half (1/2).",
+      },
     },
     {
       id: "s2_concept",
@@ -36,6 +41,11 @@ export const class4HalvesQuest: LearningQuest = {
         { id: "c2", label: "1/4", correct: true, feedback: "Correct. 1 out of 4." },
         { id: "c3", label: "2/4", feedback: "That would mean two parts shaded." },
       ],
+      adaptiveHints: {
+        firstTry: "Count total equal parts first, then count shaded parts.",
+        secondTry: "Total parts = denominator, shaded parts = numerator.",
+        recap: "For 1 shaded out of 4 equal parts, the fraction is 1/4.",
+      },
       points: 20,
     },
     {
@@ -48,6 +58,11 @@ export const class4HalvesQuest: LearningQuest = {
         { id: "c2", label: "1/3", feedback: "That is for 3 equal shares." },
         { id: "c3", label: "1/4", correct: true, feedback: "Exactly." },
       ],
+      adaptiveHints: {
+        firstTry: "Think: 1 whole shared equally among 4 children means 4 equal parts.",
+        secondTry: "Denominator is total children sharing equally: 4.",
+        recap: "Equal sharing among 4 gives each child 1/4.",
+      },
       points: 30,
     },
     {
@@ -65,4 +80,6 @@ export const class4HalvesQuest: LearningQuest = {
   },
   nextUnlockTopicIds: ["c5_04_parts_and_wholes"],
 };
+
+
 

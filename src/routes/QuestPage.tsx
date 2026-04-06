@@ -53,6 +53,19 @@ const evaluateStep = (step: ContentStep, selectedChoiceIds: string[]): CheckResu
   };
 };
 
+const getAdaptiveStepHelp = (step: ContentStep, attempts: number): string => {
+  if (attempts <= 0) return "";
+
+  if (attempts === 1) {
+    return step.adaptiveHints?.firstTry ?? step.hints?.[0] ?? "First count total equal parts, then match the asked part.";
+  }
+
+  if (attempts === 2) {
+    return step.adaptiveHints?.secondTry ?? "Think in two moves: (1) count total equal parts, (2) count selected or shaded parts.";
+  }
+
+  return step.adaptiveHints?.recap ?? `Quick recap: ${step.prompt}`;
+};
 const normalizeDifficulty = (value: string | null): PracticeDifficulty => {
   if (value === "easy" || value === "medium" || value === "hard") return value;
   return "easy";
@@ -194,6 +207,8 @@ export function QuestPage() {
   const [stepIndex, setStepIndex] = useState(0);
   const [selectedByStep, setSelectedByStep] = useState<Record<string, string[]>>({});
   const [resultsByStep, setResultsByStep] = useState<Record<string, CheckResult>>({});
+  const [attemptsByStep, setAttemptsByStep] = useState<Record<string, number>>({});
+  const [checkedSelectionsByStep, setCheckedSelectionsByStep] = useState<Record<string, string[]>>({});
 
   const [practiceLoading, setPracticeLoading] = useState(false);
   const [practiceError, setPracticeError] = useState<string>("");
@@ -212,6 +227,8 @@ export function QuestPage() {
     setStepIndex(checkpointIndex >= 0 ? checkpointIndex : 0);
     setSelectedByStep({});
     setResultsByStep({});
+    setAttemptsByStep({});
+    setCheckedSelectionsByStep({});
   }, [quest, practiceMode]);
 
   useEffect(() => {
@@ -563,6 +580,14 @@ export function QuestPage() {
   const hasChoices = (step.choices?.length ?? 0) > 0;
   const isChoiceStep =
     step.type === "single-choice" || step.type === "multi-choice" || step.type === "checkpoint";
+  const stepAttempts = attemptsByStep[step.id] ?? 0;
+  const adaptiveStepHelp = getAdaptiveStepHelp(step, stepAttempts);
+  const showHintBadge = stepAttempts === 1;
+  const checkedChoices = checkedSelectionsByStep[step.id] ?? [];
+  const feedbackLockedToCurrentSelection =
+    checkedChoices.length > 0 &&
+    checkedChoices.length === selectedChoices.length &&
+    checkedChoices.every((id) => selectedChoices.includes(id));
 
   const totalEarned = Object.values(resultsByStep).reduce((sum, row) => sum + row.earned, 0);
   const totalPossible = quest.steps
@@ -591,6 +616,12 @@ export function QuestPage() {
         <p className="muted">{step.prompt}</p>
 
         {step.hints && step.hints.length > 0 ? <p className="questHint">Hint: {step.hints[0]}</p> : null}
+        {isChoiceStep && !stepResult?.correct && adaptiveStepHelp ? (
+          <p className="learningAssist">
+            {showHintBadge ? <span className="learningAssistBadge">HINT</span> : null}
+            {adaptiveStepHelp}
+          </p>
+        ) : null}
 
         {hasChoices ? (
           <div className="questChoiceGrid">
@@ -616,6 +647,9 @@ export function QuestPage() {
                   }}
                 >
                   {choice.label}
+                  {stepResult && !stepResult.correct && feedbackLockedToCurrentSelection && selected && choice.feedback ? (
+                    <span className="questChoiceInlineFeedback">{choice.feedback}</span>
+                  ) : null}
                 </button>
               );
             })}
@@ -623,24 +657,24 @@ export function QuestPage() {
         ) : null}
 
         {isChoiceStep ? (
-          <div className="plannerMeta">
+          <div className="plannerMeta learningCheckRow">
             <button
               type="button"
               className="smallBtn"
               onClick={() => {
                 const evaluated = evaluateStep(step, selectedChoices);
                 setResultsByStep((prev) => ({ ...prev, [step.id]: evaluated }));
+                setCheckedSelectionsByStep((prev) => ({ ...prev, [step.id]: [...selectedChoices] }));
+                setAttemptsByStep((prev) => ({
+                  ...prev,
+                  [step.id]: evaluated.correct ? 0 : (prev[step.id] ?? 0) + 1,
+                }));
               }}
               disabled={selectedChoices.length === 0}
             >
               Check Answer
             </button>
-            {stepResult ? (
-              <span className={stepResult.correct ? "readinessBanner ready" : "readinessBanner blocked"}>
-                {stepResult.feedback}
-              </span>
-            ) : null}
-          </div>
+            </div>
         ) : null}
       </article>
 
@@ -669,6 +703,41 @@ export function QuestPage() {
     </section>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

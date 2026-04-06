@@ -663,25 +663,48 @@ input[type="range"] {
   background: #2f2511;
 }
 
+.learningCheckRow {
+  margin-top: 14px;
+  align-items: center;
+  gap: 10px;
+}
+
+.learningCheckRow .smallBtn {
+  min-width: 118px;
+}
+
+.learningCheckRow .readinessBanner {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
 .readinessBanner {
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-weight: 500;
-  margin-bottom: 10px;
-}
-
-.readinessBanner.ready {
-  background: #0f2a24;
-  border: 1px solid #2c6957;
-  color: #8cf2c2;
-}
-
-.readinessBanner.blocked {
-  background: #2d1419;
-  border: 1px solid #7f3441;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.35;
   color: #ff9cab;
 }
 
+.readinessBanner.ready {
+  color: #ff9cab;
+}
+
+.readinessBanner.blocked {
+  color: #ff9cab;
+}
 .readinessGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -857,6 +880,30 @@ input[type="range"] {
   font-size: 0.9rem;
 }
 
+.learningAssist {
+  margin: 8px 0 0;
+  border: 1px dashed #5f86aa;
+  background: #182b41;
+  color: #8cf2c2;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.83rem;
+  line-height: 1.35;
+}
+.learningAssistBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  border: 1px solid #4ea58d;
+  background: #1b4338;
+  color: #d7fff2;
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 0.68rem;
+  letter-spacing: 0.2px;
+}
+
 .questHint {
   margin: 8px 0;
   color: #d8c48f;
@@ -879,6 +926,15 @@ input[type="range"] {
   
 }
 
+.questChoiceInlineFeedback {
+  display: block;
+  margin-top: 6px;
+  padding-left: 2px;
+  color: #ff9cab;
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
 .questChoice.selected {
   border-color: #d4a84a;
   background: #2a2413;
@@ -1758,7 +1814,8 @@ input[type="range"] {
   border-color: #9a4656;
   background: #3a1b22;
   color: #ffc6d0;
-}`r`n.practiceLiveResult {
+}
+.practiceLiveResult {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--line-soft);
@@ -1837,6 +1894,21 @@ input[type="range"] {
   background: #3a1b22;
   color: #ffc6d0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

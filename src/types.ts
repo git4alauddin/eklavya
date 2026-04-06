@@ -56,6 +56,12 @@ export type StepChoice = {
   feedback?: string;
 };
 
+export type AdaptiveStepHints = {
+  firstTry?: string;
+  secondTry?: string;
+  recap?: string;
+};
+
 export type ContentStep = {
   id: string;
   type: ContentStepType;
@@ -64,6 +70,7 @@ export type ContentStep = {
   choices?: StepChoice[];
   expectedOrder?: string[];
   hints?: string[];
+  adaptiveHints?: AdaptiveStepHints;
   points?: number;
 };
 
@@ -163,3 +170,8 @@ export type TopicSnapshotPack = {
   revisePrompts: string[];
   commonMistakes: string[];
 };
+
+
+
+
+
