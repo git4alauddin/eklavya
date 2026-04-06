@@ -2619,3 +2619,113 @@ input[type="range"] {
 .llmActionSectionFoot .llmActionBtns {
   justify-content: center;
 }
+
+.llmFlowGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.llmFlowCard {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #111c2e;
+  padding: 10px;
+}
+
+.llmFlowCard h4 {
+  margin: 0 0 6px;
+  font-size: 0.88rem;
+}
+
+.llmFlowCard p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.llmScopePanel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #101a2a;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.llmScopePanel h4 {
+  margin: 0 0 6px;
+}
+
+.llmScopeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.llmScopeField {
+  display: grid;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: #cde8f7;
+}
+
+.llmScopeFieldWide {
+  grid-column: 1 / -1;
+}
+
+.llmScopeField input,
+.llmScopeField select {
+  width: 100%;
+  border: 1px solid #4f7b9a;
+  border-radius: 8px;
+  background: #132035;
+  color: #e7edf9;
+  padding: 7px 9px;
+  font-size: 0.8rem;
+}
+
+.llmScopeCheck {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #cde8f7;
+  font-size: 0.8rem;
+}
+
+.llmScopePreview {
+  margin-top: 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0f1828;
+  padding: 8px;
+}
+
+.llmScopePreview pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.76rem;
+  color: #d7e4fb;
+}
+
+.llmScopeActions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.llmScopeError {
+  margin: 8px 0 0;
+  color: #ff9cab;
+  font-size: 0.82rem;
+}
+
+.llmScopeStats {
+  margin-top: 10px;
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
