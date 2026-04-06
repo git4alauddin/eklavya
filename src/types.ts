@@ -62,6 +62,33 @@ export type AdaptiveStepHints = {
   recap?: string;
 };
 
+export type StoryStepOption = {
+  id: string;
+  label: string;
+  outcome: string;
+};
+
+export type StoryStepInteraction = {
+  prompt?: string;
+  options: StoryStepOption[];
+  takeaway?: string;
+  bridge?: string;
+};
+
+export type ConceptStepOption = {
+  id: string;
+  label: string;
+  outcome: string;
+  correct?: boolean;
+};
+
+export type ConceptStepInteraction = {
+  prompt?: string;
+  options: ConceptStepOption[];
+  takeaway?: string;
+  bridge?: string;
+};
+
 export type ContentStep = {
   id: string;
   type: ContentStepType;
@@ -70,6 +97,11 @@ export type ContentStep = {
   choices?: StepChoice[];
   expectedOrder?: string[];
   hints?: string[];
+  skillTag?: string;
+  storyInteraction?: StoryStepInteraction;
+  conceptInteraction?: ConceptStepInteraction;
+  phaseCue?: string;
+  successNote?: string;
   adaptiveHints?: AdaptiveStepHints;
   points?: number;
 };
@@ -90,6 +122,7 @@ export type LearningQuest = {
   steps: ContentStep[];
   masteryCheckpointStepId: string;
   reward: RewardBadge;
+  rewardHighlights?: string[];
   nextUnlockTopicIds: string[];
 };
 

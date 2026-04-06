@@ -9,6 +9,7 @@ type GetPracticeQuestionsInput = {
   difficulty: PracticeDifficulty;
   targetCount?: number;
   learnerId?: string;
+  preferredSkillTags?: string[];
 };
 
 export type PracticeSession = {
@@ -22,6 +23,7 @@ type LlmRequest = {
   difficulty: PracticeDifficulty;
   targetCount: number;
   learnerId?: string;
+  preferredSkillTags?: string[];
 };
 
 const DEFAULT_TARGET_COUNT = 6;
@@ -61,6 +63,29 @@ const dedupeQuestions = (questions: PracticeQuestion[]): PracticeQuestion[] => {
   return out;
 };
 
+const prioritizeBySkills = (
+  questions: PracticeQuestion[],
+  preferredSkillTags: string[] | undefined,
+  seedKey: string,
+): PracticeQuestion[] => {
+  if (!preferredSkillTags || preferredSkillTags.length === 0) {
+    return shuffleDeterministic(questions, seedKey);
+  }
+
+  const preferred = new Set(preferredSkillTags.map((item) => item.trim().toLowerCase()).filter(Boolean));
+  if (preferred.size === 0) {
+    return shuffleDeterministic(questions, seedKey);
+  }
+
+  const matching = questions.filter((q) => preferred.has(q.skillTag.trim().toLowerCase()));
+  const others = questions.filter((q) => !preferred.has(q.skillTag.trim().toLowerCase()));
+
+  return [
+    ...shuffleDeterministic(matching, `${seedKey}::preferred`),
+    ...shuffleDeterministic(others, `${seedKey}::others`),
+  ];
+};
+
 const getTopic = (topicId: string): TopicNode => {
   const topic = graphData.topics.find((t) => t.id === topicId);
   if (!topic) {
@@ -74,6 +99,7 @@ const getLocalQuestions = (
   difficulty: PracticeDifficulty,
   targetCount: number,
   learnerId?: string,
+  preferredSkillTags?: string[],
 ): PracticeQuestion[] => {
   const pack = practicePacks.find((p) => p.topicId === topicId);
   if (!pack) return [];
@@ -82,8 +108,8 @@ const getLocalQuestions = (
   const fallbackOther = pack.questions.filter((q) => q.difficulty !== difficulty);
 
   const ordered = [
-    ...shuffleDeterministic(sameDifficulty, makeSeed(topicId, difficulty, learnerId)),
-    ...shuffleDeterministic(fallbackOther, makeSeed(topicId, "easy", learnerId)),
+    ...prioritizeBySkills(sameDifficulty, preferredSkillTags, makeSeed(topicId, difficulty, learnerId)),
+    ...prioritizeBySkills(fallbackOther, preferredSkillTags, makeSeed(topicId, "easy", learnerId)),
   ];
   return ordered.slice(0, targetCount);
 };
@@ -155,6 +181,7 @@ const fetchLlmQuestions = async ({
   difficulty,
   targetCount,
   learnerId,
+  preferredSkillTags,
 }: LlmRequest): Promise<PracticeQuestion[]> => {
   if (!shouldUseLlm()) {
     throw new Error("LLM is explicitly disabled by config");
@@ -179,6 +206,7 @@ const fetchLlmQuestions = async ({
       targetCount,
       learnerId: learnerId ?? "anon",
       schemaVersion: 1,
+      preferredSkillTags: preferredSkillTags ?? [],
     }),
   });
 
@@ -207,9 +235,10 @@ export const getPracticeQuestions = async ({
   difficulty,
   targetCount = DEFAULT_TARGET_COUNT,
   learnerId,
+  preferredSkillTags,
 }: GetPracticeQuestionsInput): Promise<PracticeSession> => {
   const topic = getTopic(topicId);
-  const local = getLocalQuestions(topicId, difficulty, targetCount, learnerId);
+  const local = getLocalQuestions(topicId, difficulty, targetCount, learnerId, preferredSkillTags);
 
   const cached = readCachedQuestions(topicId, difficulty, learnerId);
   const cachedQuestions = dedupeQuestions(cached).filter((q) => q.topicId === topicId);
@@ -217,10 +246,15 @@ export const getPracticeQuestions = async ({
   const localFallback = dedupeQuestions([...local, ...cachedQuestions]).slice(0, targetCount);
 
   try {
-    const llmQuestions = await fetchLlmQuestions({ topic, difficulty, targetCount, learnerId });
+    const llmQuestions = await fetchLlmQuestions({ topic, difficulty, targetCount, learnerId, preferredSkillTags });
     writeCachedQuestions(topicId, difficulty, llmQuestions, learnerId);
 
-    const merged = dedupeQuestions([...llmQuestions, ...localFallback]).slice(0, targetCount);
+    const merged = prioritizeBySkills(
+      dedupeQuestions([...llmQuestions, ...localFallback]),
+      preferredSkillTags,
+      makeSeed(topicId, difficulty, learnerId),
+    ).slice(0, targetCount);
+
     return {
       topic,
       questions: merged,
@@ -258,4 +292,5 @@ export const getSubjectPracticeCoverage = (subject: Subject): { topicCount: numb
   const packCount = practicePacks.filter((pack) => pack.subject === subject).length;
   return { topicCount, packCount };
 };
+
 

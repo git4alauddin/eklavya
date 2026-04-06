@@ -41,9 +41,11 @@ const evaluateStep = (step: ContentStep, selectedChoiceIds: string[]): CheckResu
   }
 
   const pickedChoices: StepChoice[] = choices.filter((choice) => selected.has(choice.id));
+  const firstPickedFeedback = pickedChoices.find((choice) => choice.feedback)?.feedback;
+  const correctFeedback = choices.find((choice) => choice.correct)?.feedback;
   const feedback = correct
-    ? "Correct. Great work."
-    : pickedChoices.find((choice) => choice.feedback)?.feedback ?? "Not quite. Try once more with the hint.";
+    ? correctFeedback ?? "Correct. Great work."
+    : firstPickedFeedback ?? "Not quite. Try once more with the hint.";
 
   return {
     checked: true,
@@ -174,6 +176,14 @@ export function QuestPage() {
   const mode = searchParams.get("mode");
   const practiceMode = mode === "practice";
   const practiceDifficulty = normalizeDifficulty(searchParams.get("level"));
+  const practicePreferredSkillTags = useMemo(() => {
+    const raw = searchParams.get("skills");
+    if (!raw) return [];
+    return raw
+      .split(",")
+      .map((item) => decodeURIComponent(item.trim()))
+      .filter(Boolean);
+  }, [searchParams]);
 
   const loadingInsights = useMemo<LoadingInsight[]>(() => {
     const snapshot = topicSnapshots.find((item) => item.topicId === topicId);
@@ -209,6 +219,8 @@ export function QuestPage() {
   const [resultsByStep, setResultsByStep] = useState<Record<string, CheckResult>>({});
   const [attemptsByStep, setAttemptsByStep] = useState<Record<string, number>>({});
   const [checkedSelectionsByStep, setCheckedSelectionsByStep] = useState<Record<string, string[]>>({});
+  const [storyChoiceByStep, setStoryChoiceByStep] = useState<Record<string, string>>({});
+  const [conceptChoiceByStep, setConceptChoiceByStep] = useState<Record<string, string>>({});
 
   const [practiceLoading, setPracticeLoading] = useState(false);
   const [practiceError, setPracticeError] = useState<string>("");
@@ -223,12 +235,13 @@ export function QuestPage() {
 
   useEffect(() => {
     if (!quest || practiceMode) return;
-    const checkpointIndex = quest.steps.findIndex((step) => step.id === quest.masteryCheckpointStepId);
-    setStepIndex(checkpointIndex >= 0 ? checkpointIndex : 0);
+    setStepIndex(0);
     setSelectedByStep({});
     setResultsByStep({});
     setAttemptsByStep({});
     setCheckedSelectionsByStep({});
+    setStoryChoiceByStep({});
+    setConceptChoiceByStep({});
   }, [quest, practiceMode]);
 
   useEffect(() => {
@@ -251,6 +264,7 @@ export function QuestPage() {
           topicId,
           difficulty: practiceDifficulty,
           targetCount: 6,
+          preferredSkillTags: practicePreferredSkillTags,
         });
 
         if (cancelled) return;
@@ -292,7 +306,7 @@ export function QuestPage() {
     return () => {
       cancelled = true;
     };
-  }, [practiceMode, topicId, practiceDifficulty, practiceReloadKey]);
+  }, [practiceMode, topicId, practiceDifficulty, practiceReloadKey, practicePreferredSkillTags]);
 
   useEffect(() => {
     if (!practiceMode || !practiceLoading) return;
@@ -321,7 +335,11 @@ export function QuestPage() {
 
     // Perfect-score progression: auto-move to the next level.
     const timer = window.setTimeout(() => {
-      navigate("?mode=practice&level=" + nextDifficulty, { replace: true });
+      const skillsParam =
+        practicePreferredSkillTags.length > 0
+          ? `&skills=${practicePreferredSkillTags.map((item) => encodeURIComponent(item)).join(",")}`
+          : "";
+      navigate(`?mode=practice&level=${nextDifficulty}${skillsParam}`, { replace: true });
     }, 900);
 
     return () => window.clearTimeout(timer);
@@ -588,6 +606,23 @@ export function QuestPage() {
     checkedChoices.length > 0 &&
     checkedChoices.length === selectedChoices.length &&
     checkedChoices.every((id) => selectedChoices.includes(id));
+  const storyChoiceId = storyChoiceByStep[step.id] ?? "";
+  const storySelectedOption =
+    step.type === "story"
+      ? step.storyInteraction?.options.find((option) => option.id === storyChoiceId)
+      : undefined;
+  const conceptChoiceId = conceptChoiceByStep[step.id] ?? "";
+  const conceptSelectedOption =
+    step.type === "concept"
+      ? step.conceptInteraction?.options.find((option) => option.id === conceptChoiceId)
+      : undefined;
+  const canGoNext = isChoiceStep
+    ? Boolean(stepResult?.correct)
+    : step.type === "concept"
+      ? Boolean(conceptSelectedOption)
+      : step.type === "story"
+        ? Boolean(storySelectedOption)
+        : true;
 
   const totalEarned = Object.values(resultsByStep).reduce((sum, row) => sum + row.earned, 0);
   const totalPossible = quest.steps
@@ -597,6 +632,26 @@ export function QuestPage() {
   const nextUnlockTitles = quest.nextUnlockTopicIds
     .map((id) => graphData.topics.find((topic) => topic.id === id)?.title)
     .filter(Boolean);
+
+  const weakSkillTags = Array.from(
+    new Set(
+      quest.steps
+        .filter((item) => {
+          if (!item.skillTag) return false;
+          const attempts = attemptsByStep[item.id] ?? 0;
+          const result = resultsByStep[item.id];
+          return attempts > 0 || result?.correct === false;
+        })
+        .map((item) => item.skillTag as string),
+    ),
+  );
+
+  const isFinalStep = stepIndex === quest.steps.length - 1;
+
+  const practiceStartLink =
+    weakSkillTags.length > 0
+      ? `/quest/${quest.topicId}?mode=practice&level=easy&skills=${weakSkillTags.map((item) => encodeURIComponent(item)).join(",")}`
+      : `/quest/${quest.topicId}?mode=practice&level=easy`;
 
   return (
     <section className="panel">
@@ -610,17 +665,131 @@ export function QuestPage() {
         </span>
       </div>
 
-      <article className="questCard">
-        <p className="questHook">{quest.hook}</p>
+      <article className={step.type === "story" ? "questCard storyStepCard" : step.type === "concept" ? "questCard conceptStepCard" : step.type === "checkpoint" ? "questCard checkpointStepCard" : "questCard"}>
         <h3>{step.title}</h3>
-        <p className="muted">{step.prompt}</p>
 
-        {step.hints && step.hints.length > 0 ? <p className="questHint">Hint: {step.hints[0]}</p> : null}
+        {isFinalStep ? <p className="questCompleteSummary">{step.prompt}</p> : null}
+        {isFinalStep ? <div className="questCompleteDivider" /> : null}
+
+        {isFinalStep ? (
+          <div className="questInlineResult">
+            <h4>Quest Result</h4>
+            <p className="questScoreLine">Score: {totalEarned}/{totalPossible}</p>
+            <p className="muted">
+              Reward unlocked: <strong>{quest.reward.label}</strong> - {quest.reward.description}
+            </p>
+            {nextUnlockTitles.length > 0 ? (
+              <p className="questUnlockLine">Next unlock topics: {nextUnlockTitles.join(", ")}</p>
+            ) : null}
+            <div className="plannerMeta">
+              <Link className="smallBtn" to={practiceStartLink}>
+                Start Practice
+              </Link>
+              <Link className="smallBtn" to="/topics">
+                Back To Topics
+              </Link>
+              <Link className="smallBtn" to="/planner">
+                Back To Planner
+              </Link>
+            </div>
+          </div>
+        ) : null}
+
+        {step.type === "story" ? (
+          <div className="storyNarrative">
+            <p className="storySectionLabel">STORY SETUP</p>
+            <p className="storyNarrativeText">{step.prompt}</p>
+          </div>
+        ) : !isFinalStep ? (
+          <p className="muted">{step.prompt}</p>
+        ) : null}
+
+        {step.type === "story" && step.hints && step.hints.length > 0 ? (
+          <p className="storyClue">
+            <span className="storyClueBadge">CLUE</span>
+            {step.hints[0]}
+          </p>
+        ) : step.hints && step.hints.length > 0 ? (
+          <p className="questHint">Hint: {step.hints[0]}</p>
+        ) : null}
+
+        {step.type === "checkpoint" && step.phaseCue ? (
+          <div className="checkpointCueRow">
+            <p className="checkpointLabel">FINAL CHECK</p>
+            <p className="checkpointCueInline">{step.phaseCue}</p>
+          </div>
+        ) : null}
+
+        {step.type === "single-choice" && step.phaseCue ? (
+          <p className="phaseCueStrip">{step.phaseCue}</p>
+        ) : null}
+
         {isChoiceStep && !stepResult?.correct && adaptiveStepHelp ? (
           <p className="learningAssist">
             {showHintBadge ? <span className="learningAssistBadge">HINT</span> : null}
             {adaptiveStepHelp}
           </p>
+        ) : null}
+
+        {step.type === "story" && step.storyInteraction ? (
+          <div className="storyInteraction">
+            <p className="storySectionLabel">YOUR CHOICE</p>
+            <p className="storyPrompt">{step.storyInteraction.prompt ?? "Pick a path:"}</p>
+            <div className="storyOptionRow">
+              {step.storyInteraction.options.map((option) => {
+                const selected = storyChoiceId === option.id;
+                return (
+                  <button
+                    type="button"
+                    key={option.id}
+                    className={selected ? "storyOptionBtn selected" : "storyOptionBtn"}
+                    onClick={() => {
+                      setStoryChoiceByStep((prev) => ({ ...prev, [step.id]: option.id }));
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            {storySelectedOption ? (
+              <div className="storyOutcome">
+                <p>{storySelectedOption.outcome}</p>
+                {step.storyInteraction.takeaway ? <p className="storyTakeaway">{step.storyInteraction.takeaway}</p> : null}
+                {step.storyInteraction.bridge ? <p className="storyBridge">{step.storyInteraction.bridge}</p> : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {step.type === "concept" && step.conceptInteraction ? (
+          <div className="conceptInteraction">
+            <p className="conceptPrompt">{step.conceptInteraction.prompt ?? "Try this concept check:"}</p>
+            <div className="conceptOptionRow">
+              {step.conceptInteraction.options.map((option) => {
+                const selected = conceptChoiceId === option.id;
+                return (
+                  <button
+                    type="button"
+                    key={option.id}
+                    className={selected ? "conceptOptionBtn selected" : "conceptOptionBtn"}
+                    onClick={() => {
+                      setConceptChoiceByStep((prev) => ({ ...prev, [step.id]: option.id }));
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            {conceptSelectedOption ? (
+              <div className="conceptOutcome">
+                <p>{conceptSelectedOption.outcome}</p>
+                {step.conceptInteraction.takeaway ? <p className="conceptTakeaway">{step.conceptInteraction.takeaway}</p> : null}
+                {step.conceptInteraction.bridge ? <p className="conceptBridge">{step.conceptInteraction.bridge}</p> : null}
+              </div>
+            ) : null}
+          </div>
         ) : null}
 
         {hasChoices ? (
@@ -656,6 +825,7 @@ export function QuestPage() {
           </div>
         ) : null}
 
+
         {isChoiceStep ? (
           <div className="plannerMeta learningCheckRow">
             <button
@@ -674,61 +844,44 @@ export function QuestPage() {
             >
               Check Answer
             </button>
-            </div>
+          </div>
+        ) : null}
+
+        {isChoiceStep && stepResult ? (
+          <>
+            <p className={stepResult.correct ? "stepCheckFeedback ready" : "stepCheckFeedback blocked"}>
+              {stepResult.feedback}
+            </p>
+            {(step.type === "single-choice" || step.type === "checkpoint") && stepResult.correct && step.successNote ? (
+              <p className={step.type === "checkpoint" ? "phaseSuccessNote checkpointSuccessNote" : "phaseSuccessNote"}>{step.successNote}</p>
+            ) : null}
+          </>
+        ) : null}
+
+        {!isFinalStep ? (
+          <div className="plannerMeta learningNavRow">
+            <button
+              type="button"
+              className="smallBtn"
+              onClick={() => setStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={stepIndex === 0}
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              className="smallBtn"
+              onClick={() => setStepIndex((prev) => Math.min(quest.steps.length - 1, prev + 1))}
+              disabled={stepIndex >= quest.steps.length - 1 || !canGoNext}
+            >
+              Next
+            </button>
+          </div>
         ) : null}
       </article>
-
-      {stepIndex === quest.steps.length - 1 ? (
-        <article className="plannerViz">
-          <h3>Quest Result</h3>
-          <p className="muted">
-            Score: {totalEarned}/{totalPossible}
-          </p>
-          <p className="muted">
-            Reward unlocked: <strong>{quest.reward.label}</strong> - {quest.reward.description}
-          </p>
-          {nextUnlockTitles.length > 0 ? (
-            <p className="muted">Next unlock topics: {nextUnlockTitles.join(", ")}</p>
-          ) : null}
-          <div className="plannerMeta">
-            <Link className="smallBtn" to="/planner">
-              Back To Planner
-            </Link>
-            <Link className="smallBtn" to="/topics">
-              Back To Topics
-            </Link>
-          </div>
-        </article>
-      ) : null}
     </section>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
