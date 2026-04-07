@@ -233,7 +233,8 @@ export function QuestPage() {
   const [loadingFactIndex, setLoadingFactIndex] = useState(0);
   const [loadedPracticeDifficulty, setLoadedPracticeDifficulty] = useState<PracticeDifficulty | null>(null);
   const [practiceServedBy, setPracticeServedBy] = useState<PracticeServedBy>("local");
-  const [practiceFetchedAt, setPracticeFetchedAt] = useState<string>("");
+  const [practiceRequestedAt, setPracticeRequestedAt] = useState<string>("");
+  const [practiceContentGeneratedAt, setPracticeContentGeneratedAt] = useState<string>("");
   const [practiceLatencyMs, setPracticeLatencyMs] = useState<number | null>(null);
 
   useEffect(() => {
@@ -262,7 +263,8 @@ export function QuestPage() {
       setAnswerByQuestion({});
       setResultsByQuestion({});
       setPracticeServedBy("local");
-      setPracticeFetchedAt("");
+      setPracticeRequestedAt("");
+      setPracticeContentGeneratedAt("");
       setPracticeLatencyMs(null);
       try {
         const loadStartedAt = Date.now();
@@ -297,7 +299,8 @@ export function QuestPage() {
         setResultsByQuestion({});
         setLoadedPracticeDifficulty(practiceDifficulty);
         setPracticeServedBy(session.servedBy);
-        setPracticeFetchedAt(session.fetchedAt);
+        setPracticeRequestedAt(session.requestedAt);
+        setPracticeContentGeneratedAt(session.contentGeneratedAt ?? "");
         setPracticeLatencyMs(typeof session.latencyMs === "number" ? session.latencyMs : null);
       } catch (error) {
         if (cancelled) return;
@@ -464,8 +467,11 @@ export function QuestPage() {
       openrouter: "OPENROUTER",
     };
 
-    const formattedFetchedAt = practiceFetchedAt
-      ? new Date(practiceFetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    const formattedRequestedAt = practiceRequestedAt
+      ? new Date(practiceRequestedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      : "";
+    const formattedContentAt = practiceContentGeneratedAt
+      ? new Date(practiceContentGeneratedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
       : "";
 
     return (
@@ -485,8 +491,8 @@ export function QuestPage() {
           <div className="questionTopRow">
             <h3>{question.prompt}</h3>
             <span className="questionSourceBadge">{practiceSourceLabel[practiceServedBy]}</span>
-            {formattedFetchedAt ? (
-              <span className="practiceFetchMeta">{`Fetched ${formattedFetchedAt}${practiceLatencyMs !== null ? ` • ${practiceLatencyMs} ms` : ""}`}</span>
+            {(formattedContentAt || formattedRequestedAt) ? (
+              <span className="practiceFetchMeta">{`${formattedContentAt || formattedRequestedAt}${practiceLatencyMs !== null ? ` | ${practiceLatencyMs} ms` : ""}`}</span>
             ) : null}
           </div>
           <p className="muted">Skill: {question.skillTag}</p>
@@ -913,6 +919,10 @@ export function QuestPage() {
     </section>
   );
 }
+
+
+
+
 
 
 

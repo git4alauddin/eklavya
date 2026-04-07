@@ -1,19 +1,40 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import type { PracticeRequestPayload } from "./schemas";
 
-export const buildPracticePrompt = (payload: PracticeRequestPayload): string =>
-  [
-    "You are generating school practice questions.",
-    "Return strictly valid JSON only.",
-    "Schema:",
-    '{"questions":[{"id":"...","topicId":"...","difficulty":"easy|medium|hard","type":"single-choice|multi-choice|short","prompt":"...","options":[{"id":"a","text":"..."}],"correctOptionIds":["a"],"correctText":"...","explanation":"...","skillTag":"..."}]}',
-    "Rules:",
-    `- Topic id must be '${payload.topicId}' for every question.`,
-    `- Difficulty must be '${payload.difficulty}' for every question.`,
-    `- Subject: '${payload.subject}', grade band: '${payload.gradeBand}'.`,
-    `- Topic title: '${payload.title}', concept tag: '${payload.mathTopic}'.`,
-    `- Generate exactly ${payload.targetCount} questions.`,
-    "- For single-choice and multi-choice include options + correctOptionIds.",
-    "- For short include correctText.",
-    "- Keep language clear for school students and explanations concise.",
-    "- Avoid markdown or extra commentary.",
-  ].join("\n");
+const extractSection = (content: string, heading: string, nextHeading: string): string => {
+  const start = content.indexOf(heading);
+  if (start < 0) throw new Error(`Missing section '${heading}' in prompt file`);
+  const from = start + heading.length;
+  const end = content.indexOf(nextHeading, from);
+  if (end < 0) throw new Error(`Missing section '${nextHeading}' in prompt file`);
+  return content.slice(from, end).trim();
+};
+
+const fillTemplate = (template: string, vars: Record<string, string>): string => {
+  let out = template;
+  for (const [k, v] of Object.entries(vars)) {
+    out = out.replaceAll(`{{${k}}}`, v);
+  }
+  return out;
+};
+
+export const buildPracticePromptFromContract = async (payload: PracticeRequestPayload) => {
+  const promptPath = path.join(process.cwd(), "docs", "prompts", "practice-questions.md");
+  const contract = await fs.readFile(promptPath, "utf8");
+
+  const systemPrompt = extractSection(contract, "## System Prompt", "## User Prompt Template");
+  const userTemplate = extractSection(contract, "## User Prompt Template", "## Manual checklist before saving");
+
+  const prompt = fillTemplate(userTemplate, {
+    topicId: payload.topicId,
+    subject: payload.subject,
+    gradeBand: payload.gradeBand,
+    mathTopic: payload.mathTopic,
+    title: payload.title,
+    difficulty: payload.difficulty,
+    targetCount: String(payload.targetCount),
+  });
+
+  return { systemPrompt, prompt };
+};

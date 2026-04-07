@@ -20,7 +20,8 @@ export type PracticeSession = {
   questions: PracticeQuestion[];
   source: PracticeFetchSource;
   servedBy: PracticeServedBy;
-  fetchedAt: string;
+  requestedAt: string;
+  contentGeneratedAt?: string;
   latencyMs?: number;
 };
 
@@ -127,6 +128,17 @@ const getTopic = (topicId: string): TopicNode => {
   return topic;
 };
 
+const normalizeGeneratedAt = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return `${trimmed}T00:00:00.000Z`;
+  const parsed = new Date(trimmed);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+};
+
+const getLocalPack = (topicId: string): PracticePack | undefined =>
+  practicePacks.find((p) => p.topicId === topicId);
 const getLocalQuestions = (
   topicId: string,
   difficulty: PracticeDifficulty,
@@ -134,7 +146,7 @@ const getLocalQuestions = (
   learnerId?: string,
   preferredSkillTags?: string[],
 ): PracticeQuestion[] => {
-  const pack = practicePacks.find((p) => p.topicId === topicId);
+  const pack = getLocalPack(topicId);
   if (!pack) return [];
 
   const sameDifficulty = pack.questions.filter((q) => q.difficulty === difficulty);
@@ -152,26 +164,26 @@ type CachedSession = {
   questions: PracticeQuestion[];
 };
 
-const readCachedQuestions = (
+const readCachedSession = (
   topicId: string,
   difficulty: PracticeDifficulty,
   learnerId?: string,
-): PracticeQuestion[] => {
-  if (!isBrowser()) return [];
+): CachedSession | null => {
+  if (!isBrowser()) return null;
   const raw = window.localStorage.getItem(cacheKey(topicId, difficulty, learnerId));
-  if (!raw) return [];
+  if (!raw) return null;
 
   try {
     const parsed = JSON.parse(raw) as CachedSession;
-    if (!parsed?.createdAt || !Array.isArray(parsed.questions)) return [];
+    if (!parsed?.createdAt || !Array.isArray(parsed.questions)) return null;
     const expired = Date.now() - parsed.createdAt > CACHE_TTL_MS;
     if (expired) {
       window.localStorage.removeItem(cacheKey(topicId, difficulty, learnerId));
-      return [];
+      return null;
     }
-    return parsed.questions;
+    return parsed;
   } catch {
-    return [];
+    return null;
   }
 };
 
@@ -279,8 +291,12 @@ export const getPracticeQuestions = async ({
   const topic = getTopic(topicId);
   const local = getLocalQuestions(topicId, difficulty, targetCount, learnerId, preferredSkillTags);
 
-  const cached = readCachedQuestions(topicId, difficulty, learnerId);
-  const cachedQuestions = dedupeQuestions(cached).filter((q) => q.topicId === topicId);
+  const localPack = getLocalPack(topicId);
+  const localGeneratedAt = normalizeGeneratedAt(localPack?.generatedAt);
+
+  const cachedSession = readCachedSession(topicId, difficulty, learnerId);
+  const cachedGeneratedAt = cachedSession ? new Date(cachedSession.createdAt).toISOString() : undefined;
+  const cachedQuestions = dedupeQuestions(cachedSession?.questions ?? []).filter((q) => q.topicId === topicId);
 
   const localFallback = dedupeQuestions([...local, ...cachedQuestions]).slice(0, targetCount);
   const selectedPipeline = getPracticePipelinePreference();
@@ -310,7 +326,8 @@ export const getPracticeQuestions = async ({
       questions: merged,
       source: localFallback.length > 0 ? "local+llm" : "llm-only",
       servedBy: llmProvider,
-      fetchedAt: new Date().toISOString(),
+      requestedAt: new Date().toISOString(),
+      contentGeneratedAt: new Date().toISOString(),
       latencyMs: Math.max(0, Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - startedPerf)),
     };
   } catch {
@@ -320,7 +337,8 @@ export const getPracticeQuestions = async ({
         questions: localFallback,
         source: cachedQuestions.length > 0 ? "local+cache" : "local-only",
         servedBy: local.length > 0 ? "local" : "cache",
-        fetchedAt: new Date().toISOString(),
+        requestedAt: new Date().toISOString(),
+        contentGeneratedAt: cachedGeneratedAt ?? localGeneratedAt,
         latencyMs: Math.max(0, Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - startedPerf)),
       };
     }
@@ -330,7 +348,8 @@ export const getPracticeQuestions = async ({
       questions: cachedQuestions.slice(0, targetCount),
       source: "cache-only",
       servedBy: "cache",
-      fetchedAt: new Date().toISOString(),
+      requestedAt: new Date().toISOString(),
+      contentGeneratedAt: cachedGeneratedAt,
       latencyMs: Math.max(0, Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - startedPerf)),
     };
   }
@@ -351,6 +370,15 @@ export const getSubjectPracticeCoverage = (subject: Subject): { topicCount: numb
   const packCount = practicePacks.filter((pack) => pack.subject === subject).length;
   return { topicCount, packCount };
 };
+
+
+
+
+
+
+
+
+
 
 
 

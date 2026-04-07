@@ -1,7 +1,7 @@
 import { parseJsonFromModel } from "../llm/json";
 import { generateWithProvider, isProviderConfigured } from "../llm/provider";
 import type { LlmProvider } from "../llm/types";
-import { buildPracticePrompt } from "./prompt";
+import { buildPracticePromptFromContract } from "./prompt";
 import { practiceRequestSchema, practiceResponseSchema, type PracticeRequestPayload } from "./schemas";
 
 export const parsePracticePayload = (body: unknown) => practiceRequestSchema.safeParse(body);
@@ -13,8 +13,8 @@ export const generatePracticeResponse = async (
   defaultProvider: LlmProvider,
 ): Promise<ReturnType<typeof practiceResponseSchema.parse>> => {
   const providerForRequest = payload.llmProvider ?? defaultProvider;
-  const prompt = buildPracticePrompt(payload);
-  const text = await generateWithProvider(prompt, "Return strictly valid JSON only. No markdown.", {
+  const { systemPrompt, prompt } = await buildPracticePromptFromContract(payload);
+  const text = await generateWithProvider(prompt, systemPrompt, {
     provider: providerForRequest,
     ollamaProfile: payload.llmProfile,
   });
