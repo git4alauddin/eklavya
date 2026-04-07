@@ -20,6 +20,8 @@ export type PracticeSession = {
   questions: PracticeQuestion[];
   source: PracticeFetchSource;
   servedBy: PracticeServedBy;
+  fetchedAt: string;
+  latencyMs?: number;
 };
 
 type LlmRequest = {
@@ -272,6 +274,8 @@ export const getPracticeQuestions = async ({
   learnerId,
   preferredSkillTags,
 }: GetPracticeQuestionsInput): Promise<PracticeSession> => {
+  const startedAt = Date.now();
+  const startedPerf = typeof performance !== "undefined" ? performance.now() : startedAt;
   const topic = getTopic(topicId);
   const local = getLocalQuestions(topicId, difficulty, targetCount, learnerId, preferredSkillTags);
 
@@ -306,6 +310,8 @@ export const getPracticeQuestions = async ({
       questions: merged,
       source: localFallback.length > 0 ? "local+llm" : "llm-only",
       servedBy: llmProvider,
+      fetchedAt: new Date().toISOString(),
+      latencyMs: Math.max(0, Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - startedPerf)),
     };
   } catch {
     if (localFallback.length > 0) {
@@ -314,6 +320,8 @@ export const getPracticeQuestions = async ({
         questions: localFallback,
         source: cachedQuestions.length > 0 ? "local+cache" : "local-only",
         servedBy: local.length > 0 ? "local" : "cache",
+        fetchedAt: new Date().toISOString(),
+        latencyMs: Math.max(0, Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - startedPerf)),
       };
     }
 
@@ -322,6 +330,8 @@ export const getPracticeQuestions = async ({
       questions: cachedQuestions.slice(0, targetCount),
       source: "cache-only",
       servedBy: "cache",
+      fetchedAt: new Date().toISOString(),
+      latencyMs: Math.max(0, Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - startedPerf)),
     };
   }
 };
@@ -341,6 +351,10 @@ export const getSubjectPracticeCoverage = (subject: Subject): { topicCount: numb
   const packCount = practicePacks.filter((pack) => pack.subject === subject).length;
   return { topicCount, packCount };
 };
+
+
+
+
 
 
 

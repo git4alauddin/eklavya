@@ -2779,3 +2779,10 @@ input[type="range"] {
   color: #ddffe9;
   box-shadow: 0 0 0 1px #3cb87355;
 }
+
+
+.practiceFetchMeta {
+  font-size: 0.72rem;
+  color: #9bb9dc;
+  white-space: nowrap;
+}

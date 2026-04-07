@@ -233,6 +233,8 @@ export function QuestPage() {
   const [loadingFactIndex, setLoadingFactIndex] = useState(0);
   const [loadedPracticeDifficulty, setLoadedPracticeDifficulty] = useState<PracticeDifficulty | null>(null);
   const [practiceServedBy, setPracticeServedBy] = useState<PracticeServedBy>("local");
+  const [practiceFetchedAt, setPracticeFetchedAt] = useState<string>("");
+  const [practiceLatencyMs, setPracticeLatencyMs] = useState<number | null>(null);
 
   useEffect(() => {
     if (!quest || practiceMode) return;
@@ -260,6 +262,8 @@ export function QuestPage() {
       setAnswerByQuestion({});
       setResultsByQuestion({});
       setPracticeServedBy("local");
+      setPracticeFetchedAt("");
+      setPracticeLatencyMs(null);
       try {
         const loadStartedAt = Date.now();
         const session = await getPracticeQuestions({
@@ -293,6 +297,8 @@ export function QuestPage() {
         setResultsByQuestion({});
         setLoadedPracticeDifficulty(practiceDifficulty);
         setPracticeServedBy(session.servedBy);
+        setPracticeFetchedAt(session.fetchedAt);
+        setPracticeLatencyMs(typeof session.latencyMs === "number" ? session.latencyMs : null);
       } catch (error) {
         if (cancelled) return;
         const message = error instanceof Error ? error.message : "Failed to load practice questions.";
@@ -458,6 +464,10 @@ export function QuestPage() {
       openrouter: "OPENROUTER",
     };
 
+    const formattedFetchedAt = practiceFetchedAt
+      ? new Date(practiceFetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      : "";
+
     return (
       <section className="panel">
         <div className="sectionHead practiceHead">
@@ -475,6 +485,9 @@ export function QuestPage() {
           <div className="questionTopRow">
             <h3>{question.prompt}</h3>
             <span className="questionSourceBadge">{practiceSourceLabel[practiceServedBy]}</span>
+            {formattedFetchedAt ? (
+              <span className="practiceFetchMeta">{`Fetched ${formattedFetchedAt}${practiceLatencyMs !== null ? ` • ${practiceLatencyMs} ms` : ""}`}</span>
+            ) : null}
           </div>
           <p className="muted">Skill: {question.skillTag}</p>
 
@@ -900,6 +913,9 @@ export function QuestPage() {
     </section>
   );
 }
+
+
+
 
 
 
