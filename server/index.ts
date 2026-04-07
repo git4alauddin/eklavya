@@ -1,114 +1,17 @@
-﻿import dotenv from "dotenv";
+import dotenv from "dotenv";
 import cors from "cors";
 import express from "express";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { graphData } from "../src/graphData";
+import { buildPracticePrompt } from "./practice/prompt";
+import { practiceRequestSchema, practiceResponseSchema } from "./practice/schemas";
+import { buildLearningPromptFromContract } from "./learning/prompt";
+import { learningGenerateSchema, learningQuestSchema, manualQuestIngestSchema } from "./learning/schemas";
 
 dotenv.config({ path: "server/.env" });
 dotenv.config();
-
-const requestSchema = z.object({
-  mode: z.literal("practice").optional(),
-  topicId: z.string().min(1),
-  subject: z.enum(["math", "physics", "chemistry"]),
-  gradeBand: z.string().min(1),
-  mathTopic: z.string().min(1),
-  title: z.string().min(1),
-  difficulty: z.enum(["easy", "medium", "hard"]),
-  targetCount: z.number().int().min(1).max(20).default(6),
-  learnerId: z.string().optional(),
-  schemaVersion: z.number().optional(),
-});
-
-const questionSchema = z
-  .object({
-    id: z.string().min(1),
-    topicId: z.string().min(1),
-    difficulty: z.enum(["easy", "medium", "hard"]),
-    type: z.enum(["single-choice", "multi-choice", "short"]),
-    prompt: z.string().min(1),
-    options: z
-      .array(
-        z.object({
-          id: z.string().min(1),
-          text: z.string().min(1),
-        }),
-      )
-      .optional(),
-    correctOptionIds: z.array(z.string().min(1)).optional(),
-    correctText: z.string().optional(),
-    explanation: z.string().min(1),
-    skillTag: z.string().min(1),
-  })
-  .superRefine((value, ctx) => {
-    const isChoice = value.type === "single-choice" || value.type === "multi-choice";
-    if (isChoice) {
-      if (!value.options || value.options.length < 2) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Choice questions must include at least 2 options" });
-      }
-      if (!value.correctOptionIds || value.correctOptionIds.length === 0) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Choice questions must include correctOptionIds" });
-      }
-      if (value.type === "single-choice" && value.correctOptionIds && value.correctOptionIds.length !== 1) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Single-choice must have exactly one correct option" });
-      }
-    }
-    if (value.type === "short" && !value.correctText) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Short questions must include correctText" });
-    }
-  });
-
-const responseSchema = z.object({
-  questions: z.array(questionSchema).min(1),
-});
-
-const learningStepSchema = z
-  .object({
-    id: z.string().min(1),
-    type: z.enum(["story", "concept", "single-choice", "multi-choice", "match", "reorder", "checkpoint", "reward"]),
-    title: z.string().min(1),
-    prompt: z.string().min(1),
-  })
-  .passthrough();
-
-const learningQuestSchema = z
-  .object({
-    id: z.string().min(1),
-    subject: z.enum(["math", "physics", "chemistry"]),
-    topicId: z.string().min(1),
-    hook: z.string().min(1),
-    learningGoals: z.array(z.string().min(1)).min(1),
-    estimatedMinutes: z.number().int().min(1).max(60),
-    steps: z.array(learningStepSchema).min(1),
-    masteryCheckpointStepId: z.string().min(1),
-    reward: z.object({
-      id: z.string().min(1),
-      label: z.string().min(1),
-      description: z.string().min(1),
-    }),
-    nextUnlockTopicIds: z.array(z.string().min(1)),
-  })
-  .passthrough();
-
-const manualQuestIngestSchema = z.object({
-  subject: z.enum(["math", "physics", "chemistry"]),
-  topicId: z.string().min(1),
-  fileName: z.string().min(1).optional(),
-  exportName: z.string().min(1).optional(),
-  quest: learningQuestSchema,
-});
-
-const learningGenerateSchema = z.object({
-  subject: z.enum(["math", "physics", "chemistry"]),
-  topicId: z.string().min(1),
-  topicTitle: z.string().min(1),
-  mathTopic: z.string().min(1),
-  gradeBand: z.string().min(1),
-  description: z.string().min(1),
-  nextUnlockTopicIds: z.array(z.string().min(1)).default([]),
-});
 
 const topicsSourceScopeSchema = z.object({
   subject: z.enum(["math", "physics", "chemistry"]),
@@ -119,14 +22,44 @@ const topicsSourceScopeSchema = z.object({
 });
 
 const app = express();
-app.use(cors({ origin: ["http://localhost:5173"], credentials: false }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      try {
+        const u = new URL(origin);
+        const hostOk = u.hostname === "localhost" || u.hostname === "127.0.0.1";
+        if (hostOk) return callback(null, true);
+      } catch {
+        // fall through
+      }
+      callback(new Error("CORS origin not allowed"));
+    },
+    credentials: false,
+  }),
+);
 app.use(express.json({ limit: "2mb" }));
 
 const port = Number(process.env.PORT ?? 3001);
+type LlmProvider = "openrouter" | "ollama";
+const llmProvider: LlmProvider = String(process.env.LLM_PROVIDER ?? "openrouter").toLowerCase() === "openrouter" ? "openrouter" : "ollama";
+
 const apiKey = process.env.OPENROUTER_API_KEY;
 const model = process.env.OPENROUTER_MODEL ?? "openai/gpt-4o-mini";
 const siteUrl = process.env.OPENROUTER_SITE_URL ?? "http://localhost:5173";
 const appName = process.env.OPENROUTER_APP_NAME ?? "eklavya-practice";
+
+const ollamaEndpoint = process.env.OLLAMA_ENDPOINT ?? "http://127.0.0.1:11434/api/chat";
+const ollamaProfile = String(process.env.OLLAMA_MODEL_PROFILE ?? "fast").toLowerCase();
+const ollamaModelFast = process.env.OLLAMA_MODEL_FAST ?? "qwen2.5:3b-instruct";
+const ollamaModelQuality = process.env.OLLAMA_MODEL_QUALITY ?? "qwen2.5:7b-instruct";
+const ollamaModelOverride = process.env.OLLAMA_MODEL?.trim();
+
+const selectedOllamaModel = (): string => {
+  if (ollamaModelOverride) return ollamaModelOverride;
+  if (ollamaProfile === "quality") return ollamaModelQuality;
+  return ollamaModelFast;
+};
 
 const parseJson = (raw: string): unknown => {
   try {
@@ -148,6 +81,19 @@ type OpenRouterResponse = {
   error?: {
     message?: string;
   };
+};
+
+type OllamaResponse = {
+  message?: {
+    content?: string;
+  };
+  response?: string;
+  error?: string;
+};
+
+type GenerateOptions = {
+  ollamaProfile?: "fast" | "quality";
+  provider?: "ollama" | "openrouter";
 };
 
 const generateWithOpenRouter = async (
@@ -184,41 +130,64 @@ const generateWithOpenRouter = async (
   return content;
 };
 
-const extractSection = (content: string, heading: string, nextHeading: string): string => {
-  const start = content.indexOf(heading);
-  if (start < 0) throw new Error(`Missing section '${heading}' in prompt file`);
-  const from = start + heading.length;
-  const end = content.indexOf(nextHeading, from);
-  if (end < 0) throw new Error(`Missing section '${nextHeading}' in prompt file`);
-  return content.slice(from, end).trim();
-};
+const generateWithOllama = async (
+  prompt: string,
+  systemPrompt = "Return strictly valid JSON only. No markdown.",
+  options: GenerateOptions = {},
+): Promise<string> => {
+  const modelForCall =
+    ollamaModelOverride
+      ? ollamaModelOverride
+      : options.ollamaProfile === "quality"
+        ? ollamaModelQuality
+        : options.ollamaProfile === "fast"
+          ? ollamaModelFast
+          : selectedOllamaModel();
 
-const fillTemplate = (template: string, vars: Record<string, string>): string => {
-  let out = template;
-  for (const [k, v] of Object.entries(vars)) {
-    out = out.replaceAll(`{{${k}}}`, v);
-  }
-  return out;
-};
-
-const buildLearningPromptFromContract = async (payload: z.infer<typeof learningGenerateSchema>) => {
-  const promptPath = path.join(process.cwd(), "docs", "prompts", "quest-content.md");
-  const contract = await fs.readFile(promptPath, "utf8");
-
-  const systemPrompt = extractSection(contract, "## System Prompt", "## User Prompt Template");
-  const userTemplate = extractSection(contract, "## User Prompt Template", "## Manual checklist before saving");
-
-  const prompt = fillTemplate(userTemplate, {
-    subject: payload.subject,
-    topicId: payload.topicId,
-    topicTitle: payload.topicTitle,
-    mathTopic: payload.mathTopic,
-    gradeBand: payload.gradeBand,
-    description: payload.description,
-    nextUnlockTopicIdsJsonArray: JSON.stringify(payload.nextUnlockTopicIds),
+  const response = await fetch(ollamaEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: modelForCall,
+      stream: false,
+      options: {
+        temperature: 0.4,
+      },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt },
+      ],
+    }),
   });
 
-  return { systemPrompt, prompt };
+  const data = (await response.json()) as OllamaResponse;
+  if (!response.ok) {
+    throw new Error(data?.error ?? `Ollama request failed with status ${response.status}`);
+  }
+
+  const content = (data?.message?.content ?? data?.response ?? "").trim();
+  if (!content) throw new Error("Ollama returned empty response text");
+  return content;
+};
+
+const generateWithProvider = async (
+  prompt: string,
+  systemPrompt = "Return strictly valid JSON only. No markdown.",
+  options: GenerateOptions = {},
+): Promise<string> => {
+  const providerForCall = options.provider ?? llmProvider;
+
+  if (providerForCall === "ollama") {
+    return generateWithOllama(prompt, systemPrompt, options);
+  }
+
+  if (providerForCall === "openrouter") {
+    return generateWithOpenRouter(prompt, systemPrompt);
+  }
+
+  throw new Error(`Unsupported LLM provider '${providerForCall}'`);
 };
 
 const parseGradeBands = (grades: string): string[] => {
@@ -296,8 +265,19 @@ const upsertContentsIndex = async (
   return indexPath;
 };
 
+const isLlmConfigured = (): boolean => {
+  if (llmProvider === "ollama") return true;
+  if (llmProvider === "openrouter") return Boolean(apiKey);
+  return false;
+};
+
+const activeModel = (): string => {
+  if (llmProvider === "ollama") return selectedOllamaModel();
+  return model;
+};
+
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, provider: "openrouter", model, llmConfigured: Boolean(apiKey) });
+  res.json({ ok: true, provider: llmProvider, model: activeModel(), llmConfigured: isLlmConfigured() });
 });
 
 app.post("/api/topics/source-scope", (req, res) => {
@@ -337,37 +317,30 @@ app.post("/api/topics/source-scope", (req, res) => {
 });
 
 app.post("/api/practice", async (req, res) => {
-  const parsed = requestSchema.safeParse(req.body);
+  const parsed = practiceRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid payload", details: parsed.error.flatten() });
   }
 
-  if (!apiKey) {
-    return res.status(500).json({ error: "OPENROUTER_API_KEY is not configured on backend" });
+  if (!isLlmConfigured()) {
+    return res.status(500).json({ error: "LLM provider is not configured on backend" });
   }
 
   const payload = parsed.data;
-  const prompt = [
-    "You are generating school practice questions.",
-    "Return strictly valid JSON only.",
-    "Schema:",
-    '{"questions":[{"id":"...","topicId":"...","difficulty":"easy|medium|hard","type":"single-choice|multi-choice|short","prompt":"...","options":[{"id":"a","text":"..."}],"correctOptionIds":["a"],"correctText":"...","explanation":"...","skillTag":"..."}]}',
-    "Rules:",
-    `- Topic id must be '${payload.topicId}' for every question.`,
-    `- Difficulty must be '${payload.difficulty}' for every question.`,
-    `- Subject: '${payload.subject}', grade band: '${payload.gradeBand}'.`,
-    `- Topic title: '${payload.title}', concept tag: '${payload.mathTopic}'.`,
-    `- Generate exactly ${payload.targetCount} questions.`,
-    "- For single-choice and multi-choice include options + correctOptionIds.",
-    "- For short include correctText.",
-    "- Keep language clear for school students and explanations concise.",
-    "- Avoid markdown or extra commentary.",
-  ].join("\n");
+  const providerForRequest = payload.llmProvider ?? llmProvider;
+  if (providerForRequest === "openrouter" && !apiKey) {
+    return res.status(500).json({ error: "OPENROUTER_API_KEY is not configured on backend" });
+  }
+
+  const prompt = buildPracticePrompt(payload);
 
   try {
-    const text = await generateWithOpenRouter(prompt);
+    const text = await generateWithProvider(prompt, "Return strictly valid JSON only. No markdown.", {
+      provider: providerForRequest,
+      ollamaProfile: payload.llmProfile,
+    });
     const json = parseJson(text);
-    const validated = responseSchema.parse(json);
+    const validated = practiceResponseSchema.parse(json);
     return res.json(validated);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown generation error";
@@ -381,13 +354,13 @@ app.post("/api/learning/generate", async (req, res) => {
     return res.status(400).json({ error: "Invalid payload", details: parsed.error.flatten() });
   }
 
-  if (!apiKey) {
-    return res.status(500).json({ error: "OPENROUTER_API_KEY is not configured on backend" });
+  if (!isLlmConfigured()) {
+    return res.status(500).json({ error: "LLM provider is not configured on backend" });
   }
 
   try {
     const { systemPrompt, prompt } = await buildLearningPromptFromContract(parsed.data);
-    const raw = await generateWithOpenRouter(prompt, systemPrompt);
+    const raw = await generateWithProvider(prompt, systemPrompt);
     const json = parseJson(raw);
     const quest = learningQuestSchema.parse(json);
 
@@ -472,3 +445,9 @@ app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`Practice API running on http://localhost:${port}`);
 });
+
+
+
+
+
+

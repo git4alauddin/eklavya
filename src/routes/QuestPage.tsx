@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { learningQuests } from "../data/contents";
 import { graphData } from "../graphData";
-import { getPracticeQuestions } from "../services/practiceService";
+import { getPracticeQuestions, type PracticeServedBy } from "../services/practiceService";
 import { topicSnapshots } from "../data/snapshots";
 import type { ContentStep, PracticeDifficulty, PracticeQuestion, StepChoice } from "../types";
 
@@ -232,6 +232,7 @@ export function QuestPage() {
   const [practiceReloadKey, setPracticeReloadKey] = useState(0);
   const [loadingFactIndex, setLoadingFactIndex] = useState(0);
   const [loadedPracticeDifficulty, setLoadedPracticeDifficulty] = useState<PracticeDifficulty | null>(null);
+  const [practiceServedBy, setPracticeServedBy] = useState<PracticeServedBy>("local");
 
   useEffect(() => {
     if (!quest || practiceMode) return;
@@ -258,6 +259,7 @@ export function QuestPage() {
       setSelectedByQuestion({});
       setAnswerByQuestion({});
       setResultsByQuestion({});
+      setPracticeServedBy("local");
       try {
         const loadStartedAt = Date.now();
         const session = await getPracticeQuestions({
@@ -290,6 +292,7 @@ export function QuestPage() {
         setAnswerByQuestion({});
         setResultsByQuestion({});
         setLoadedPracticeDifficulty(practiceDifficulty);
+        setPracticeServedBy(session.servedBy);
       } catch (error) {
         if (cancelled) return;
         const message = error instanceof Error ? error.message : "Failed to load practice questions.";
@@ -448,6 +451,13 @@ export function QuestPage() {
 
     const isPracticeComplete = answeredProgress.length === practiceQuestions.length;
 
+    const practiceSourceLabel: Record<PracticeServedBy, string> = {
+      local: "LOCAL FILE",
+      cache: "BROWSER CACHE",
+      ollama: "OLLAMA",
+      openrouter: "OPENROUTER",
+    };
+
     return (
       <section className="panel">
         <div className="sectionHead practiceHead">
@@ -464,7 +474,7 @@ export function QuestPage() {
         <article className="questCard">
           <div className="questionTopRow">
             <h3>{question.prompt}</h3>
-            <span className="questionSourceBadge">{question.id.startsWith("llm_") ? "LLM" : "LOCAL CACHE"}</span>
+            <span className="questionSourceBadge">{practiceSourceLabel[practiceServedBy]}</span>
           </div>
           <p className="muted">Skill: {question.skillTag}</p>
 
@@ -653,16 +663,24 @@ export function QuestPage() {
       ? `/quest/${quest.topicId}?mode=practice&level=easy&skills=${weakSkillTags.map((item) => encodeURIComponent(item)).join(",")}`
       : `/quest/${quest.topicId}?mode=practice&level=easy`;
 
+  const questTopic = graphData.topics.find((item) => item.id === quest.topicId);
+  const learningSubjectLabel = questTopic?.subject === "math" ? "MATHS" : (questTopic?.subject?.toUpperCase() ?? "SUBJECT");
+  const learningSourceLabel = "LOCAL FILE";
+
   return (
     <section className="panel">
       <div className="sectionHead">
         <div className="sectionTitleWithBadge">
           <h2>Quest Player</h2>
+          <span className="subjectBadge">{learningSubjectLabel}</span>
           <span className="resultCount">{quest.estimatedMinutes} min</span>
         </div>
-        <span className="pageStatus">
-          Step {stepIndex + 1}/{quest.steps.length}
-        </span>
+        <div className="sectionHeadRight">
+          <span className="questionSourceBadge">{learningSourceLabel}</span>
+          <span className="pageStatus">
+            Step {stepIndex + 1}/{quest.steps.length}
+          </span>
+        </div>
       </div>
 
       <article className={step.type === "story" ? "questCard storyStepCard" : step.type === "concept" ? "questCard conceptStepCard" : step.type === "checkpoint" ? "questCard checkpointStepCard" : "questCard"}>

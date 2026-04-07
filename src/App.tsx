@@ -1,5 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { supportedSubjects, subjectLabels } from "./data/subjects";
+import {
+  getPracticePipelinePreference,
+  setPracticePipelinePreference,
+  type PracticePipeline,
+} from "./services/practiceService";
 import "./style.css";
 
 function App() {
@@ -9,6 +15,16 @@ function App() {
   const isHome = location.pathname === "/";
   const topicSearch = new URLSearchParams(location.search);
   const activeNavSubject = location.pathname === "/topics" ? topicSearch.get("subject") : null;
+  const [pipeline, setPipeline] = useState<PracticePipeline>(() => getPracticePipelinePreference());
+
+  useEffect(() => {
+    setPipeline(getPracticePipelinePreference());
+  }, [location.pathname]);
+
+  const applyPipeline = (next: PracticePipeline) => {
+    setPracticePipelinePreference(next);
+    setPipeline(next);
+  };
 
   return (
     <div className={isGraphRoute ? "page pageGraph" : "page"}>
@@ -65,6 +81,38 @@ function App() {
 
       <header className="hero">
         <p>Clear paths, interactive practice, and confident mastery in one place.</p>
+        {isHome ? (
+          <div className="pipelineBadges" aria-label="Practice pipeline selector">
+            <button
+              type="button"
+              className={`pipelineBadge ${pipeline === "local-cache" ? "active" : ""}`}
+              onClick={() => applyPipeline("local-cache")}
+            >
+              Local Cache
+            </button>
+            <button
+              type="button"
+              className={`pipelineBadge ${pipeline === "llm-quality" ? "active" : ""}`}
+              onClick={() => applyPipeline("llm-quality")}
+            >
+              LLM Quality
+            </button>
+            <button
+              type="button"
+              className={`pipelineBadge ${pipeline === "llm-fast" ? "active" : ""}`}
+              onClick={() => applyPipeline("llm-fast")}
+            >
+              LLM Fast
+            </button>
+            <button
+              type="button"
+              className={`pipelineBadge ${pipeline === "openrouter" ? "active" : ""}`}
+              onClick={() => applyPipeline("openrouter")}
+            >
+              OpenRouter
+            </button>
+          </div>
+        ) : null}
       </header>
       <Outlet />
     </div>
@@ -72,5 +120,3 @@ function App() {
 }
 
 export default App;
-
-

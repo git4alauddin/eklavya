@@ -112,8 +112,53 @@ const flowCardsBySection: Record<LlmSectionId, FlowCard[]> = {
   prerequisites: prerequisitesFlowCards,
 };
 
-const resolveTopicsScopeEndpoint = (): string =>
-  String(import.meta.env.VITE_TOPICS_SCOPE_ENDPOINT ?? "http://localhost:3001/api/topics/source-scope");
+const resolveTopicsScopeEndpoint = (): string => {
+  const fromEnv = String(import.meta.env.VITE_TOPICS_SCOPE_ENDPOINT ?? "").trim();
+  if (fromEnv) return fromEnv;
+
+  if (typeof window !== "undefined") {
+    const proto = window.location.protocol === "https:" ? "https:" : "http:";
+    const host = window.location.hostname || "localhost";
+    return proto + "//" + host + ":3001/api/topics/source-scope";
+  }
+
+  return "http://localhost:3001/api/topics/source-scope";
+};
+const flowCardFileBadge = (sectionId: LlmSectionId, cardId: string): string => {
+  if (sectionId === "learning") {
+    if (cardId === "payload" || cardId === "prompt-contract" || cardId === "llm-call" || cardId === "parser-validator") return "server/index.ts";
+    if (cardId === "result-preview") return "src/routes/QuestPage.tsx";
+    if (cardId === "manual-ingest") return "server/index.ts";
+  }
+
+  if (sectionId === "practice") {
+    if (cardId === "practice-payload" || cardId === "practice-prompt" || cardId === "practice-llm-call" || cardId === "practice-parse") return "server/index.ts";
+    if (cardId === "practice-cache") return "src/services/practiceService.ts";
+    if (cardId === "practice-return") return "src/routes/QuestPage.tsx";
+  }
+
+  if (sectionId === "topics") {
+    if (cardId === "topics-source") return "server/index.ts";
+    if (cardId === "topics-extract" || cardId === "topics-normalize") return "src/data/*/topics/*.ts";
+    if (cardId === "topics-validate") return "scripts/validate-data.ts";
+    if (cardId === "topics-review") return "src/routes/TopicApprovalPage.tsx";
+    if (cardId === "topics-write") return "server/index.ts";
+  }
+
+  if (sectionId === "subtopics") {
+    if (cardId === "subtopics-input" || cardId === "subtopics-generate" || cardId === "subtopics-validate" || cardId === "subtopics-write") return "src/data/*/sub-topics/*.ts";
+    if (cardId === "subtopics-checkpoints") return "src/types.ts";
+    if (cardId === "subtopics-review") return "src/routes/SubtopicReviewPage.tsx";
+  }
+
+  if (sectionId === "prerequisites") {
+    if (cardId === "prereq-map" || cardId === "prereq-thresholds" || cardId === "prereq-cycle-check" || cardId === "prereq-toposort") return "src/graphEngine.ts";
+    if (cardId === "prereq-review") return "src/routes/PrerequisiteApprovalPage.tsx";
+    if (cardId === "prereq-write") return "src/data/*/graph.ts";
+  }
+
+  return "-";
+};
 
 export function LlmIntegrationPage() {
   const [selectedSection, setSelectedSection] = useState<LlmSectionId | null>(null);
@@ -329,8 +374,7 @@ export function LlmIntegrationPage() {
 
                   <div className="llmFlowGrid">
                     {flowCardsBySection[sectionId].map((card) => (
-                      <article className="llmFlowCard" key={card.id}>
-                        <h4>{card.title}</h4>
+                      <article className="llmFlowCard" key={card.id}><span className="llmFlowFileBadge">{flowCardFileBadge(sectionId, card.id)}</span><h4>{card.title}</h4>
                         <p>{card.brief}</p>
                       </article>
                     ))}
@@ -344,3 +388,9 @@ export function LlmIntegrationPage() {
     </section>
   );
 }
+
+
+
+
+
+

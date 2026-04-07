@@ -4,6 +4,9 @@ import { practicePacks, validatePracticePacks } from "../data/practice";
 
 type PracticeFetchSource = "local-only" | "local+cache" | "local+llm" | "llm-only" | "cache-only";
 
+export type PracticePipeline = "local-cache" | "llm-fast" | "llm-quality" | "openrouter";
+export type PracticeServedBy = "local" | "cache" | "ollama" | "openrouter";
+
 type GetPracticeQuestionsInput = {
   topicId: string;
   difficulty: PracticeDifficulty;
@@ -16,6 +19,7 @@ export type PracticeSession = {
   topic: TopicNode;
   questions: PracticeQuestion[];
   source: PracticeFetchSource;
+  servedBy: PracticeServedBy;
 };
 
 type LlmRequest = {
@@ -24,13 +28,40 @@ type LlmRequest = {
   targetCount: number;
   learnerId?: string;
   preferredSkillTags?: string[];
+  llmProfile?: "fast" | "quality";
+  llmProvider?: "ollama" | "openrouter";
 };
 
 const DEFAULT_TARGET_COUNT = 6;
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 const cachePrefix = "eklavya.practice";
+const pipelinePrefKey = "eklavya.practice.pipeline";
 
 const isBrowser = (): boolean => typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+
+const normalizePipelinePreference = (value: string | null | undefined): PracticePipeline | null => {
+  const normalized = String(value ?? "").toLowerCase();
+  if (normalized === "local-cache") return "local-cache";
+  if (normalized === "llm-fast") return "llm-fast";
+  if (normalized === "llm-quality") return "llm-quality";
+  if (normalized === "openrouter") return "openrouter";
+  return null;
+};
+
+const defaultPipelineFromEnv = (): PracticePipeline => {
+  const flag = String(import.meta.env.VITE_ENABLE_PRACTICE_LLM ?? "").toLowerCase();
+  return flag === "false" ? "local-cache" : "llm-fast";
+};
+
+export const getPracticePipelinePreference = (): PracticePipeline => {
+  if (!isBrowser()) return defaultPipelineFromEnv();
+  return normalizePipelinePreference(window.localStorage.getItem(pipelinePrefKey)) ?? defaultPipelineFromEnv();
+};
+
+export const setPracticePipelinePreference = (pipeline: PracticePipeline): void => {
+  if (!isBrowser()) return;
+  window.localStorage.setItem(pipelinePrefKey, pipeline);
+};
 
 const cacheKey = (topicId: string, difficulty: PracticeDifficulty, learnerId?: string): string =>
   `${cachePrefix}.${topicId}.${difficulty}.${learnerId ?? "anon"}`;
@@ -154,8 +185,8 @@ const writeCachedQuestions = (
 };
 
 const shouldUseLlm = (): boolean => {
-  const flag = String(import.meta.env.VITE_ENABLE_PRACTICE_LLM ?? "").toLowerCase();
-  return flag !== "false";
+  const pipeline = getPracticePipelinePreference();
+  return pipeline !== "local-cache";
 };
 
 const normalizeLlmPack = (
@@ -182,6 +213,8 @@ const fetchLlmQuestions = async ({
   targetCount,
   learnerId,
   preferredSkillTags,
+  llmProfile,
+  llmProvider,
 }: LlmRequest): Promise<PracticeQuestion[]> => {
   if (!shouldUseLlm()) {
     throw new Error("LLM is explicitly disabled by config");
@@ -207,6 +240,8 @@ const fetchLlmQuestions = async ({
       learnerId: learnerId ?? "anon",
       schemaVersion: 1,
       preferredSkillTags: preferredSkillTags ?? [],
+      llmProfile,
+      llmProvider,
     }),
   });
 
@@ -244,9 +279,20 @@ export const getPracticeQuestions = async ({
   const cachedQuestions = dedupeQuestions(cached).filter((q) => q.topicId === topicId);
 
   const localFallback = dedupeQuestions([...local, ...cachedQuestions]).slice(0, targetCount);
+  const selectedPipeline = getPracticePipelinePreference();
+  const llmProfile = selectedPipeline === "llm-quality" ? "quality" : "fast";
+  const llmProvider = selectedPipeline === "openrouter" ? "openrouter" : "ollama";
 
   try {
-    const llmQuestions = await fetchLlmQuestions({ topic, difficulty, targetCount, learnerId, preferredSkillTags });
+    const llmQuestions = await fetchLlmQuestions({
+      topic,
+      difficulty,
+      targetCount,
+      learnerId,
+      preferredSkillTags,
+      llmProfile,
+      llmProvider,
+    });
     writeCachedQuestions(topicId, difficulty, llmQuestions, learnerId);
 
     const merged = prioritizeBySkills(
@@ -259,6 +305,7 @@ export const getPracticeQuestions = async ({
       topic,
       questions: merged,
       source: localFallback.length > 0 ? "local+llm" : "llm-only",
+      servedBy: llmProvider,
     };
   } catch {
     if (localFallback.length > 0) {
@@ -266,6 +313,7 @@ export const getPracticeQuestions = async ({
         topic,
         questions: localFallback,
         source: cachedQuestions.length > 0 ? "local+cache" : "local-only",
+        servedBy: local.length > 0 ? "local" : "cache",
       };
     }
 
@@ -273,6 +321,7 @@ export const getPracticeQuestions = async ({
       topic,
       questions: cachedQuestions.slice(0, targetCount),
       source: "cache-only",
+      servedBy: "cache",
     };
   }
 };
@@ -292,5 +341,8 @@ export const getSubjectPracticeCoverage = (subject: Subject): { topicCount: numb
   const packCount = practicePacks.filter((pack) => pack.subject === subject).length;
   return { topicCount, packCount };
 };
+
+
+
 
 

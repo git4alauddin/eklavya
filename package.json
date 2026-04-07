@@ -1,41 +1,41 @@
 {
-    "name": "prereq-tenali",
-    "private": true,
-    "version": "0.0.0",
-    "type": "module",
-    "scripts": {
-        "dev": "vite",
-        "typecheck": "tsc --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest",
-        "validate:data": "node --import tsx ./scripts/validate-data.ts",
-        "check": "npm run typecheck && npm run test && npm run validate:data",
-        "build": "tsc && vite build",
-        "preview": "vite preview",
-        "dev:api": "node --import tsx ./server/index.ts",
-        "dev:web": "vite",
-        "dev:all": "concurrently \"npm run dev:web\" \"npm run dev:api\""
-    },
-    "devDependencies": {
-        "@types/cors": "^2.8.19",
-        "@types/express": "^5.0.6",
-        "@types/node": "^25.5.2",
-        "@types/react": "^19.2.14",
-        "@types/react-dom": "^19.2.3",
-        "@vitejs/plugin-react": "^6.0.1",
-        "concurrently": "^9.2.1",
-        "tsx": "^4.20.6",
-        "typescript": "~5.9.3",
-        "vite": "^8.0.1",
-        "vitest": "^3.2.4"
-    },
-    "dependencies": {
-        "cors": "^2.8.6",
-        "dotenv": "^17.4.1",
-        "express": "^5.2.1",
-        "react": "^19.2.4",
-        "react-dom": "^19.2.4",
-        "react-router-dom": "^7.14.0",
-        "zod": "^4.3.6"
-    }
+  "name": "eklavya",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate:data": "node --import tsx ./scripts/validate-data.ts",
+    "check": "npm run typecheck && npm run test && npm run validate:data",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "dev:api": "node --import tsx ./server/index.ts",
+    "dev:web": "vite",
+    "dev:all": "concurrently \"npm run dev:web\" \"npm run dev:api\""
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "tsx": "^4.20.6",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.1",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0",
+    "zod": "^4.3.6"
+  }
 }
